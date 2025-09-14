@@ -18,7 +18,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename="/fiancial-controll-site">
         <div className="flex flex-col min-h-screen bg-background">
           <main className="flex-1 pb-4">
             <div className="max-w-[894px] mx-auto px-4">
