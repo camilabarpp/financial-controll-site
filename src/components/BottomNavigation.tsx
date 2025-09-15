@@ -12,7 +12,7 @@ const BottomNavigation = () => {
   ];
 
   return (
-    <div className="fixed bottom-4 left-0 right-0 px-4 z-50">
+    <div className="md:hidden fixed bottom-4 left-0 right-0 px-4 z-50">
       <div className="max-w-[894px] mx-auto">
         <nav className="bg-background border border-border/40 rounded-full shadow-lg backdrop-blur-sm bg-background/95">
           <div className="flex justify-around items-center py-1">
