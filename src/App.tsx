@@ -28,10 +28,10 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename={baseURL}>
         <Routes>
           <Route
-            path="/login"
+            path="/logar"
             element={<Login />}
           />
           <Route
