@@ -3,65 +3,74 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { Calendar } from "@/components/ui/calendar";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from "@/components/ui/drawer";
+import { DeleteAccountModal } from "@/components/DeleteAccountModal";
 import {
   Camera,
   User,
   Lock,
   Mail,
   Phone,
-  Calendar as CalendarIcon,
-  Save,
-  Pencil,
-  Trash2
+  Shield,
+  Trash2,
+  Edit3,
+  Eye,
+  EyeOff
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/utils/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-const Account = () => {
-  const [isEditing, setIsEditing] = useState(false);
+const Account= () => {
+  const navigate = useNavigate();
   const [imageHover, setImageHover] = useState(false);
-  const [formData, setFormData] = useState({
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const initialFormData = {
     name: "Camila Barpp",
     email: "camila@email.com",
-    phone: "(51) 99999-9999",
-    birthDate: new Date("1990-01-01")
+    avatar: "https://github.com/camilabarpp.png"
+  };
+  const [formData, setFormData] = useState(initialFormData);
+  const [formErrors, setFormErrors] = useState({
+    name: "",
+    email: ""
   });
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const avatar = ev.target?.result as string;
+        setFormData(prev => ({ ...prev, avatar }));
+        // Envia imediatamente para o backend
+        const body = {
+          name: formData.name,
+          email: formData.email,
+          avatar
+        };
+        console.log("Body enviado para /account (imagem alterada):", body);
+        // Aqui você pode fazer o fetch/axios para o backend
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: ""
   });
+  const [passwordErrors, setPasswordErrors] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
 
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-
-  const [date, setDate] = useState<Date>(formData.birthDate);
   const [isLoading, setIsLoading] = useState(false);
-
-  const handleSaveProfile = async () => {
-    setIsLoading(true);
-    try {
-      // Simulando salvamento
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success("Perfil atualizado", {
-        description: "Suas informações foram salvas com sucesso."
-      });
-      
-      setIsEditing(false);
-    } catch (error) {
-      toast.error("Erro ao atualizar", {
-        description: "Não foi possível salvar suas informações."
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const handleInputChange = (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -77,236 +86,424 @@ const Account = () => {
     }));
   };
 
+  const handleSaveProfile = async () => {
+    let errors = { name: "", email: "" };
+    let hasError = false;
+    if (!formData.name.trim()) {
+      errors.name = "Preencha o nome completo";
+      hasError = true;
+    }
+    if (!formData.email.trim()) {
+      errors.email = "Preencha o e-mail";
+      hasError = true;
+    }
+    setFormErrors(errors);
+    if (hasError) return;
+    setIsLoading(true);
+    try {
+      // Simulando envio do body
+      const body = {
+        name: formData.name,
+        email: formData.email,
+        avatar: formData.avatar
+      };
+      console.log("Body enviado para /account:", body);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Sucesso: pode adicionar lógica extra se quiser
+    } catch (error) {
+      // Erro: pode adicionar lógica extra se quiser
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleUpdatePassword = async () => {
     setIsChangingPassword(true);
+    let errors = { currentPassword: "", newPassword: "", confirmPassword: "" };
+    let hasError = false;
+    if (!passwordData.currentPassword) {
+      errors.currentPassword = "Digite sua senha atual";
+      hasError = true;
+    }
+    if (!passwordData.newPassword) {
+      errors.newPassword = "Digite a nova senha";
+      hasError = true;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      errors.confirmPassword = "As senhas não coincidem";
+      hasError = true;
+    }
+    setPasswordErrors(errors);
+    if (hasError) {
+      setIsChangingPassword(false);
+      return;
+    }
     try {
-      // Validações
-      if (!passwordData.currentPassword) {
-        throw new Error("Digite sua senha atual");
-      }
-      if (!passwordData.newPassword) {
-        throw new Error("Digite a nova senha");
-      }
-      if (passwordData.newPassword !== passwordData.confirmPassword) {
-        throw new Error("As senhas não coincidem");
-      }
-
       // Simulando atualização
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success("Senha atualizada", {
-        description: "Sua senha foi alterada com sucesso."
-      });
-
-      // Limpa os campos
       setPasswordData({
         currentPassword: "",
         newPassword: "",
         confirmPassword: ""
       });
-    } catch (error) {
-      toast.error("Erro ao atualizar senha", {
-        description: error instanceof Error ? error.message : "Tente novamente mais tarde"
+      setPasswordErrors({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
       });
+    } catch (error) {
+      // erro genérico
     } finally {
       setIsChangingPassword(false);
     }
   };
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [deletePasswordError, setDeletePasswordError] = useState("");
+  const deletePasswordInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (deleteModalOpen && deletePasswordInputRef.current) {
+      // Timeout para garantir que o modal já abriu
+      setTimeout(() => {
+        deletePasswordInputRef.current?.focus();
+      }, 100);
+    }
+  }, [deleteModalOpen]);
+  const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) {
+      setDeletePasswordError("Digite sua senha para confirmar");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      // Simulando exclusão
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setDeleteModalOpen(false);
+      setDeletePassword("");
+      setDeletePasswordError("");
+      navigate("/");
+    } catch (error) {
+      // erro genérico
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/5">
-      <div className="container max-w-5xl py-12">
-        <div className="grid gap-10 md:grid-cols-[300px_1fr]">
-          {/* Sidebar */}
-          <div className="space-y-8">
-            {/* Profile Card */}
+    <div className="min-h-screen bg-background p-4 pb-20">
+      <div
+        className="max-w-3xl mx-auto space-y-8"
+        {...(deleteModalOpen ? { inert: "" } : {})}
+      >
+        <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
+          <div className="space-y-6">
             <Card className="border-none shadow-lg bg-gradient-to-br from-primary/10 via-primary/5 to-background transition-all hover:shadow-xl">
               <CardContent className="p-8">
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center text-center space-y-4">
                   <div className="relative group">
                     <Avatar
-                      className="w-28 h-28 shadow-xl"
+                      className="w-32 h-32 shadow-xl border-4 border-background"
                       onMouseEnter={() => setImageHover(true)}
                       onMouseLeave={() => setImageHover(false)}
                     >
-                      <AvatarImage src="https://github.com/camilabarpp.png" alt="@camilabarpp" />
-                      <AvatarFallback>CB</AvatarFallback>
+                      <AvatarImage src={formData.avatar} alt="avatar" />
+                      <AvatarFallback className="text-xl font-semibold">CB</AvatarFallback>
                     </Avatar>
-                    <div
+                    <label
                       className={cn(
-                        "absolute inset-0 bg-black/60 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer",
+                        "absolute inset-0 bg-black/60 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer",
                         imageHover ? "opacity-100 scale-100" : "opacity-0 scale-95"
                       )}
                     >
-                      <Camera className="w-7 h-7 text-white" />
-                    </div>
+                      <Camera className="w-8 h-8 text-white" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleAvatarChange}
+                      />
+                    </label>
                   </div>
-                  <h2 className="mt-5 text-2xl font-bold text-primary">{formData.name}</h2>
-                  <p className="text-sm text-muted-foreground">{formData.email}</p>
+                  <div className="space-y-2 mt-4">
+                    <h2 className="text-2xl font-bold text-primary">{formData.name}</h2>
+                    <p className="text-muted-foreground flex items-center justify-center space-x-2">
+                      <Mail className="w-4 h-4" />
+                      <span>{formData.email}</span>
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center space-x-2">
-              <User className="h-5 w-5 text-primary" />
-              <span>Informações Pessoais</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Nome */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome completo</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={handleInputChange("name")}
-                placeholder="Digite seu nome completo"
-                className="w-full"
-              />
-            </div>
-
-            {/* Email */}
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange("email")}
-                  placeholder="Digite seu e-mail"
-                  className="pl-10 w-full"
-                />
-              </div>
-            </div>
-
-            {/* Data de Nascimento */}
-            <div className="space-y-2">
-              <Label>Data de nascimento</Label>
-              <Popover>
-                <PopoverTrigger asChild>
+            <div className="hidden lg:block">
+              <Card className="border-none shadow-lg">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Ações</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
                   <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
+                    variant="ghost"
+                    className="w-full justify-start h-11 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => setDeleteModalOpen(true)}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? date.toLocaleDateString('pt-BR') : "Selecione uma data"}
+                    <Trash2 className="mr-3 h-4 w-4" />
+                    Excluir Conta
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
+                  <DeleteAccountModal
+                    open={deleteModalOpen}
+                    isLoading={isLoading}
+                    password={deletePassword}
+                    passwordError={deletePasswordError}
+                    showPassword={showDeletePassword}
+                    onPasswordChange={value => {
+                      setDeletePassword(value);
+                      setDeletePasswordError("");
+                    }}
+                    onShowPasswordToggle={() => setShowDeletePassword(v => !v)}
+                    onConfirm={handleDeleteAccount}
+                    onCancel={() => {
+                      setDeleteModalOpen(false);
+                      setDeletePassword("");
+                      setDeletePasswordError("");
+                    }}
                   />
-                </PopoverContent>
-              </Popover>
+                </CardContent>
+              </Card>
             </div>
-
-            {/* Botão Salvar */}
-            <Button 
-              onClick={handleSaveProfile}
-              disabled={isLoading}
-              className="w-full mt-6"
-            >
-              {isLoading ? "Salvando..." : "Salvar Alterações"}
-            </Button>
-          </CardContent>
-        </Card>
-
           </div>
 
-          {/* Main Content */}
-          <div className="space-y-6">
-            {/* Security Settings */}
+          <div className="space-y-8">
             <Card className="border-none shadow-lg">
-              <CardHeader>
+              <CardHeader className="pb-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Segurança</CardTitle>
-                    <CardDescription>Gerencie sua senha e autenticação</CardDescription>
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Informações Pessoais</CardTitle>
+                      <CardDescription>Atualize suas informações básicas</CardDescription>
+                    </div>
                   </div>
-                  <Lock className="h-5 w-5 text-muted-foreground" />
+                  <Edit3 className="h-5 w-5 text-muted-foreground" />
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  {/* Senha Atual */}
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Senha Atual</Label>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <Label htmlFor="name" className="text-sm font-medium">Nome completo</Label>
                     <Input
-                      id="currentPassword"
-                      type="password"
-                      value={passwordData.currentPassword}
-                      onChange={handlePasswordChange("currentPassword")}
-                      placeholder="Digite sua senha atual"
-                      className="w-full"
-                      disabled={isChangingPassword}
+                      id="name"
+                      value={formData.name}
+                      onChange={handleInputChange("name")}
+                      placeholder="Digite seu nome completo"
+                      className={`h-11${formErrors.name ? ' border-red-500' : ''}`}
                     />
+                    {formErrors.name && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>
+                    )}
                   </div>
 
-                  {/* Nova Senha */}
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">Nova Senha</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={passwordData.newPassword}
-                      onChange={handlePasswordChange("newPassword")}
-                      placeholder="Digite sua nova senha"
-                      className="w-full"
-                      disabled={isChangingPassword}
-                    />
+                  <div className="space-y-3">
+                    <Label htmlFor="email" className="text-sm font-medium">E-mail</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange("email")}
+                        placeholder="Digite seu e-mail"
+                        className={`pl-10 h-11${formErrors.email ? ' border-red-500' : ''}`}
+                      />
+                    </div>
+                    {formErrors.email && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
+                    )}
                   </div>
-
-                  {/* Confirmar Nova Senha */}
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={passwordData.confirmPassword}
-                      onChange={handlePasswordChange("confirmPassword")}
-                      placeholder="Confirme sua nova senha"
-                      className="w-full"
-                      disabled={isChangingPassword}
-                    />
-                  </div>
-
-                  {/* Botão Alterar Senha */}
-                  <Button 
-                    className="w-full" 
-                    onClick={handleUpdatePassword}
-                    disabled={isChangingPassword}
-                  >
-                    {isChangingPassword ? "Alterando..." : "Alterar Senha"}
-                  </Button>
                 </div>
 
-                <Separator />
+                <Button 
+                  onClick={handleSaveProfile}
+                  disabled={
+                    isLoading ||
+                    !formData.name.trim() ||
+                    !formData.email.trim() ||
+                    (
+                      formData.name === initialFormData.name &&
+                      formData.email === initialFormData.email &&
+                      formData.avatar === initialFormData.avatar
+                    )
+                  }
+                  className="w-full md:w-auto h-11 px-8 mt-6"
+                >
+                  {isLoading ? "Salvando..." : "Salvar Alterações"}
+                </Button>
+              </CardContent>
+            </Card>
 
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium">Verificação em Duas Etapas</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Adicione uma camada extra de segurança à sua conta.
-                    </p>
+            <Card className="border-none shadow-lg">
+              <CardHeader className="pb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-orange-500/10 rounded-lg">
+                      <Lock className="h-5 w-5 text-orange-500" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Segurança</CardTitle>
+                      <CardDescription>Gerencie sua senha</CardDescription>
+                    </div>
                   </div>
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    Configurar 2FA
-                  </Button>
+                  <Shield className="h-5 w-5 text-muted-foreground" />
                 </div>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                <div className="space-y-6">
+                  <h4 className="font-semibold text-lg">Alterar Senha</h4>
+                  <div className="grid gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="currentPassword" className="text-sm font-medium">Senha Atual</Label>
+                      <div className="relative">
+                        <Input
+                          id="currentPassword"
+                          type={showPassword ? "text" : "password"}
+                          value={passwordData.currentPassword}
+                          onChange={e => {
+                            handlePasswordChange("currentPassword")(e);
+                            setPasswordErrors(prev => ({ ...prev, currentPassword: "" }));
+                          }}
+                          placeholder="Digite sua senha atual"
+                          className={`border rounded-lg px-3 py-2 bg-background pr-10 ${passwordErrors.currentPassword ? 'border-red-500' : ''}`}
+                          disabled={isChangingPassword}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-11 w-11"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      {passwordErrors.currentPassword && (
+                        <p className="text-sm text-red-500 mt-1">{passwordErrors.currentPassword}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword" className="text-sm font-medium">Nova Senha</Label>
+                      <div className="relative">
+                        <Input
+                          id="newPassword"
+                          type={showNewPassword ? "text" : "password"}
+                          value={passwordData.newPassword}
+                          onChange={e => {
+                            handlePasswordChange("newPassword")(e);
+                            setPasswordErrors(prev => ({ ...prev, newPassword: "" }));
+                          }}
+                          placeholder="Digite sua nova senha"
+                          className={`border rounded-lg px-3 py-2 bg-background pr-10 ${passwordErrors.newPassword ? 'border-red-500' : ''}`}
+                          disabled={isChangingPassword}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-11 w-11"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                        >
+                          {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      {passwordErrors.newPassword && (
+                        <p className="text-sm text-red-500 mt-1">{passwordErrors.newPassword}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirmar Nova Senha</Label>
+                      <div className="relative">
+                        <Input
+                          id="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={passwordData.confirmPassword}
+                          onChange={e => {
+                            handlePasswordChange("confirmPassword")(e);
+                            setPasswordErrors(prev => ({ ...prev, confirmPassword: "" }));
+                          }}
+                          placeholder="Confirme sua nova senha"
+                          className={`border rounded-lg px-3 py-2 bg-background pr-10 ${passwordErrors.confirmPassword ? 'border-red-500' : ''}`}
+                          disabled={isChangingPassword}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-11 w-11"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      {passwordErrors.confirmPassword && (
+                        <p className="text-sm text-red-500 mt-1">{passwordErrors.confirmPassword}</p>
+                      )}
+                    </div>
+
+                    <Button 
+                      onClick={handleUpdatePassword}
+                      disabled={
+                        isChangingPassword ||
+                        !passwordData.currentPassword.trim() ||
+                        !passwordData.newPassword.trim() ||
+                        !passwordData.confirmPassword.trim() ||
+                        passwordData.newPassword !== passwordData.confirmPassword
+                      }
+                      className="w-full md:w-auto h-11 px-8"
+                    >
+                      {isChangingPassword ? "Alterando..." : "Alterar Senha"}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="block lg:hidden">
+            <Card className="border-none shadow-lg">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Ações</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start h-11 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => setDeleteModalOpen(true)}
+                >
+                  <Trash2 className="mr-3 h-4 w-4" />
+                  Excluir Conta
+                </Button>
+                <DeleteAccountModal
+                  open={deleteModalOpen}
+                  isLoading={isLoading}
+                  password={deletePassword}
+                  passwordError={deletePasswordError}
+                  showPassword={showDeletePassword}
+                  onPasswordChange={value => {
+                    setDeletePassword(value);
+                    setDeletePasswordError("");
+                  }}
+                  onShowPasswordToggle={() => setShowDeletePassword(v => !v)}
+                  onConfirm={handleDeleteAccount}
+                  onCancel={() => {
+                    setDeleteModalOpen(false);
+                    setDeletePassword("");
+                    setDeletePasswordError("");
+                  }}
+                />
               </CardContent>
             </Card>
           </div>

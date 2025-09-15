@@ -6,8 +6,8 @@ import { useDateValidation } from "@/hooks/use-date-validation";
 import { useInputMask } from "@/hooks/use-input-mask";
 import InputMask from "react-input-mask";
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Combobox } from "@/components/ui/combobox";
+import { Input } from "./ui/input";
+import { Combobox } from "./ui/combobox";
 
 interface TransactionModalProps {
   open: boolean;
@@ -139,7 +139,7 @@ export function TransactionModal({
         <form onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
           <div>
             <label className="block text-sm font-medium mb-1">Descrição</label>
-            <input 
+            <Input 
               type="text" 
               className="w-full border rounded-lg px-3 py-2 bg-background" 
               placeholder="Ex: Depósito mensal"
@@ -178,7 +178,7 @@ export function TransactionModal({
 
           <div>
             <label className="block text-sm font-medium mb-1">Valor</label>
-            <input
+            <Input
               type="text"
               className="w-full border rounded-lg px-3 py-2 bg-background"
               placeholder="R$ 0,00"

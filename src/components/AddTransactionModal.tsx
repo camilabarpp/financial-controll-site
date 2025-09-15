@@ -6,6 +6,7 @@ import { useDateValidation } from "@/hooks/use-date-validation";
 import { useInputMask } from "@/hooks/use-input-mask";
 import InputMask from "react-input-mask";
 import { useState } from "react";
+import { Input } from "./ui/input";
 
 interface AddTransactionModalProps {
   open: boolean;
@@ -110,9 +111,9 @@ export function AddTransactionModal({ open, onClose, onSubmit, initialData, mode
         <form onSubmit={handleSubmit} className="space-y-4 px-4 pb-4">
           <div>
             <label className="block text-sm font-medium mb-1">Descrição</label>
-            <input 
+            <Input 
               type="text" 
-              className="w-full border rounded-lg px-3 py-2 bg-background" 
+              className="w-full rounded-lg px-3 py-2 bg-background" 
               placeholder="Ex: Depósito mensal"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -149,7 +150,7 @@ export function AddTransactionModal({ open, onClose, onSubmit, initialData, mode
 
           <div>
             <label className="block text-sm font-medium mb-1">Valor</label>
-            <input
+            <Input
               type="text"
               className="w-full border rounded-lg px-3 py-2 bg-background"
               placeholder="R$ 0,00"
@@ -157,7 +158,6 @@ export function AddTransactionModal({ open, onClose, onSubmit, initialData, mode
               onChange={(e) => {
                 const { maskCurrencyInput } = useInputMask();
                 const { maskedValue, numericValue } = maskCurrencyInput(e.target.value);
-                
                 setFormData(prev => ({
                   ...prev,
                   valueFormatted: maskedValue,

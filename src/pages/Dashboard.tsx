@@ -27,14 +27,6 @@ const Dashboard = () => {
     { id: 5, description: "Gasolina", amount: 89.90, category: "Transporte", date: "2024-09-06", type: "expense" },
   ];
 
-  const formatOrHideBalance = (value: number) => {
-    if (!showBalance) return "R$ ••••••";
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(Math.abs(value));
-  };
-
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
       "Renda": "bg-positive text-primary-foreground",
