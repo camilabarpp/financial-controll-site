@@ -28,7 +28,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter basename={baseURL}>
+      <BrowserRouter>
         <Routes>
           <Route
             path="/login"
@@ -37,10 +37,6 @@ const App = () => (
           <Route
             path="/register"
             element={<Register />}
-          />
-          <Route
-            path="/forgot-password"
-            element={<ForgotPassword />}
           />
           <Route
             path="*"
