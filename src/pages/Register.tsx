@@ -1,20 +1,17 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Mail, Lock, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../App";
 
-function Register() {
+export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
+  const loginUrl = import.meta.env.VITE_BASE_URL + "/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,11 +25,9 @@ function Register() {
       return;
     }
     setIsLoading(true);
-    // Simula chamada ao backend
     await new Promise(resolve => setTimeout(resolve, 1200));
-    login("mocked-token");
     setIsLoading(false);
-    navigate("/");
+    // Aqui você pode redirecionar ou mostrar erro
   };
 
   return (
@@ -103,25 +98,10 @@ function Register() {
           </form>
           <div className="mt-6 text-center text-muted-foreground text-sm">
             Já tem conta?{' '}
-            <Button
-              type="button"
-              variant="link"
-              className="text-primary text-sm p-0 h-auto"
-              onClick={() => {
-                if (window.location.hash !== "#/login") {
-                  window.location.hash = "#/login";
-                } else {
-                  navigate("/login");
-                }
-              }}
-            >
-              Entrar
-            </Button>
+            <a href={loginUrl} className="text-primary underline">Entrar</a>
           </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-
-export default Register;
