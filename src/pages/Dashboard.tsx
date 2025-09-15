@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { formatDate } from "@/utils/format-date";
 
 const Dashboard = () => {
-  const [showBalance, setShowBalance] = useState(true);
+  const [showBalance, setShowBalance] = useState(false);
   
   // Mock data
   const balance = {
@@ -58,15 +58,15 @@ const Dashboard = () => {
           </Button>
         </div>
 
-        {/* Balance Overview */}
         <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium opacity-90">Saldo Total</CardTitle>
-            <div className="text-3xl font-bold">{formatCurrency(balance.total)}</div>
+            <div className="text-3xl font-bold">
+              {showBalance ? formatCurrency(balance.total) : '••••••'}
+            </div>
           </CardHeader>
         </Card>
 
-        {/* Financial Summary */}
         <div className="grid grid-cols-2 gap-4">
           <Card>
             <CardContent className="p-4">
@@ -75,7 +75,7 @@ const Dashboard = () => {
                 <span className="text-sm font-medium">Entradas</span>
               </div>
               <div className="text-xl font-bold text-foreground mt-1">
-                {formatCurrency(balance.income)}
+                {showBalance ? formatCurrency(balance.income) : '••••••'}
               </div>
             </CardContent>
           </Card>
@@ -87,7 +87,7 @@ const Dashboard = () => {
                 <span className="text-sm font-medium">Saídas</span>
               </div>
               <div className="text-xl font-bold text-foreground mt-1">
-                {formatCurrency(balance.expenses)}
+                {showBalance ? formatCurrency(balance.expenses) : '••••••'}
               </div>
             </CardContent>
           </Card>
@@ -102,7 +102,7 @@ const Dashboard = () => {
                 <span className="font-medium text-foreground">Saldo Livre</span>
               </div>
               <div className="text-lg font-bold text-foreground">
-                {formatCurrency(balance.available)}
+                {showBalance ? formatCurrency(balance.available) : '••••••'}
               </div>
             </div>
           </CardContent>

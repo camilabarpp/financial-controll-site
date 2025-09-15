@@ -10,14 +10,23 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User } from "lucide-react";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
+import { useContext } from "react";
+import { AuthContext } from "../App";
 
 export function ProfileSheet() {
   const { navigateTo } = useAppNavigation();
   const [open, setOpen] = useState(false);
+  const { logout } = useContext(AuthContext);
 
   const handleProfileClick = () => {
-    setOpen(false); // Fecha o modal
-    navigateTo('/account'); // Navega para a página
+    setOpen(false);
+    navigateTo('/account');
+  };
+
+  const handleLogout = () => {
+    setOpen(false);
+    logout();
+    navigateTo('/login');
   };
 
   return (
@@ -54,7 +63,11 @@ export function ProfileSheet() {
               <User size={16} />
               Perfil
             </Button>
-            <Button variant="ghost" className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-100/50">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-100/50"
+              onClick={handleLogout}
+            >
               <LogOut size={16} />
               Sair
             </Button>

@@ -96,10 +96,6 @@ export default function Register() {
               {isLoading ? "Criando..." : "Criar Conta"}
             </Button>
           </form>
-          <div className="mt-6 text-center text-muted-foreground text-sm">
-            Já tem conta?{' '}
-            <a href={loginUrl} className="text-primary underline">Entrar</a>
-          </div>
         </CardContent>
       </Card>
     </div>
