@@ -11,9 +11,17 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User } from "lucide-react";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
+import { useContext } from "react";
+import { AuthContext } from "../App";
 
 export function ProfileDropdown() {
   const { navigateTo } = useAppNavigation();
+  const { logout } = useContext(AuthContext);
+
+  const handleLogout = () => {
+    logout();
+    navigateTo('/login');
+  };
 
   return (
     <DropdownMenu>
@@ -42,7 +50,10 @@ export function ProfileDropdown() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-red-500 hover:!text-red-600 focus:!text-red-600 hover:!bg-red-100/50">
+        <DropdownMenuItem
+          className="text-red-500 hover:!text-red-600 focus:!text-red-600 hover:!bg-red-100/50"
+          onSelect={handleLogout}
+        >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sair</span>
         </DropdownMenuItem>

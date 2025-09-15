@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../App";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -13,6 +15,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,8 +27,9 @@ export default function Login() {
     setIsLoading(true);
     // Simulação de login
     await new Promise(resolve => setTimeout(resolve, 1200));
+    login("mocked-token");
     setIsLoading(false);
-    // Aqui você pode redirecionar ou mostrar erro
+    navigate("/");
   };
 
   return (
