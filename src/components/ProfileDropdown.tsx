@@ -9,14 +9,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, ChevronDown } from "lucide-react";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { useContext } from "react";
-import { AuthContext } from "../App";
+import { AuthContext } from "@/contexts/AuthContext";
 
 export function ProfileDropdown() {
   const { navigateTo } = useAppNavigation();
-  const { logout } = useContext(AuthContext);
+  const { logout, user } = useContext(AuthContext);
 
   const handleLogout = () => {
     logout();
@@ -26,19 +26,20 @@ export function ProfileDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full hidden md:flex">
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full hidden md:flex items-center gap-1 px-2 focus:bg-transparent active:bg-transparent hover:bg-muted/40">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="https://github.com/camilabarpp.png" alt="@camilabarpp" />
-            <AvatarFallback>CB</AvatarFallback>
+            <AvatarImage src={user?.avatar || undefined} alt={user?.name || "@user"} />
+            <AvatarFallback>{user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : "U"}</AvatarFallback>
           </Avatar>
+          <ChevronDown className="h-4 w-4 text-primary" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Camila Barpp</p>
+            <p className="text-sm font-medium leading-none">{user?.name || "Usuário"}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              camila@email.com
+              {user?.email || ""}
             </p>
           </div>
         </DropdownMenuLabel>

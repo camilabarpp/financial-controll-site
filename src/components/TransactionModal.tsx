@@ -47,17 +47,22 @@ export function TransactionModal({
     category: ""
   };
 
-  const [formData, setFormData] = useState(initialData ? {
-    description: initialData.description,
-    valueFormatted: new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(initialData.value),
-    value: initialData.value,
-    type: initialData.type,
-    date: initialData.date.split('-').reverse().join('/'),
-    category: initialData.category
-  } : emptyFormData);
+  const [formData, setFormData] = useState(() => {
+    if (initialData) {
+      return {
+        description: initialData.description,
+        valueFormatted: new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(initialData.value),
+        value: initialData.value,
+        type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
+        date: initialData.date.split('-').reverse().join('/'),
+        category: initialData.category
+      };
+    }
+    return emptyFormData;
+  });
 
   const [dateError, setDateError] = useState("");
   const [newCategory, setNewCategory] = useState("");
@@ -107,7 +112,7 @@ export function TransactionModal({
     onSubmit({
       description: formData.description,
       value: formData.value,
-      type: formData.type,
+      type: formData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
       date: submissionDate,
       category: finalCategory
     });
@@ -119,6 +124,21 @@ export function TransactionModal({
       setDateError("");
       setNewCategory("");
     }
+
+    if (mode === 'edit' && initialData) {
+      setFormData({
+        description: initialData.description,
+        valueFormatted: new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(initialData.value),
+        value: initialData.value,
+        type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
+        date: initialData.date.split('-').reverse().join('/'),
+        category: initialData.category
+      });
+    }
+
     onClose();
   };
 

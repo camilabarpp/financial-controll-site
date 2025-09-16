@@ -17,7 +17,9 @@ import {
   Eye,
   EyeOff
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
+import { AuthContext } from "@/contexts/AuthContext";
+import { getMe, updateUser } from "@/services/userService";
 import { cn } from "@/utils/utils";
 import { useNavigate } from "react-router-dom";
 
@@ -28,12 +30,34 @@ const Account= () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  const initialFormData = {
-    name: "Camila Barpp",
-    email: "camila@email.com",
-    avatar: "https://github.com/camilabarpp.png"
-  };
-  const [formData, setFormData] = useState(initialFormData);
+  const { user, login } = useContext(AuthContext);
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    avatar: user?.avatar || ""
+  });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        avatar: user.avatar || ""
+      });
+    } else {
+      // Busca do backend caso não esteja no contexto
+      const token = localStorage.getItem("token");
+      if (token) {
+        getMe(token).then(u => {
+          setFormData({
+            name: u.name || "",
+            email: u.email || "",
+            avatar: u.avatar || ""
+          });
+        });
+      }
+    }
+  }, [user]);
   const [formErrors, setFormErrors] = useState({
     name: "",
     email: ""
@@ -101,15 +125,15 @@ const Account= () => {
     if (hasError) return;
     setIsLoading(true);
     try {
-      // Simulando envio do body
-      const body = {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token não encontrado");
+      await updateUser(token, {
         name: formData.name,
         email: formData.email,
         avatar: formData.avatar
-      };
-      console.log("Body enviado para /account:", body);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // Sucesso: pode adicionar lógica extra se quiser
+      });
+      // Atualiza o contexto do usuário
+      await login(token);
     } catch (error) {
       // Erro: pode adicionar lógica extra se quiser
     } finally {
@@ -139,8 +163,13 @@ const Account= () => {
       return;
     }
     try {
-      // Simulando atualização
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token não encontrado");
+      await updateUser(token, {
+        password: passwordData.newPassword
+      });
+      // Atualiza o contexto do usuário
+      await login(token);
       setPasswordData({
         currentPassword: "",
         newPassword: "",
@@ -332,9 +361,10 @@ const Account= () => {
                     !formData.name.trim() ||
                     !formData.email.trim() ||
                     (
-                      formData.name === initialFormData.name &&
-                      formData.email === initialFormData.email &&
-                      formData.avatar === initialFormData.avatar
+                      user &&
+                      formData.name === user.name &&
+                      formData.email === user.email &&
+                      formData.avatar === user.avatar
                     )
                   }
                   className="w-full md:w-auto h-11 px-8 mt-6"

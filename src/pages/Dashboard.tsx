@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Eye, EyeOff, PiggyBank, Wallet, ArrowRight } from "lucide-react";
 import { useState } from "react";
+import { useContext } from "react";
+import { AuthContext } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/utils/format-currency";
 import { Link } from "react-router-dom";
@@ -9,6 +11,7 @@ import { formatDate } from "@/utils/format-date";
 
 const Dashboard = () => {
   const [showBalance, setShowBalance] = useState(false);
+  const { user } = useContext(AuthContext);
   
   // Mock data
   const balance = {
@@ -45,7 +48,7 @@ const Dashboard = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between pt-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Olá, João!</h1>
+            <h1 className="text-2xl font-bold text-foreground">Olá, {user?.name?.split(' ')[0] || 'Usuário'}!</h1>
             <p className="text-muted-foreground">Bem-vindo de volta</p>
           </div>
           <Button

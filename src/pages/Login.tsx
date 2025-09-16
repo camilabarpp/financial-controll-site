@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Mail, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
-import { AuthContext } from "../App";
+import { loginService, saveToken } from "@/services/authService";
+import { AuthContext } from "@/contexts/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -25,11 +26,16 @@ export default function Login() {
       return;
     }
     setIsLoading(true);
-    // Simulação de login
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    login("mocked-token");
-    setIsLoading(false);
-    navigate("/");
+    try {
+      const { token } = await loginService({ email, password });
+      saveToken(token);
+      login(token);
+      navigate("/");
+    } catch (err: any) {
+      setError(err.message || "Erro ao fazer login");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

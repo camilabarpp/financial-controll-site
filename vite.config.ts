@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => ({
   base: '/financial-controll-site/',
   server: {
     host: "::",
-    port: 6060,
+    port: 3001,
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

@@ -8,15 +8,15 @@ import {
   SheetTrigger,
 } from "../components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, ChevronDown } from "lucide-react";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { useContext } from "react";
-import { AuthContext } from "../App";
+import { AuthContext } from "@/contexts/AuthContext";
 
 export function ProfileSheet() {
   const { navigateTo } = useAppNavigation();
   const [open, setOpen] = useState(false);
-  const { logout } = useContext(AuthContext);
+  const { logout, user } = useContext(AuthContext);
 
   const handleProfileClick = () => {
     setOpen(false);
@@ -32,26 +32,27 @@ export function ProfileSheet() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full md:hidden">
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full md:hidden flex items-center gap-1 px-2 focus:bg-transparent active:bg-transparent hover:bg-muted/40">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="https://github.com/camilabarpp.png" alt="@camilabarpp" />
-            <AvatarFallback>CB</AvatarFallback>
+            <AvatarImage src={user?.avatar || undefined} alt={user?.name || "@user"} />
+            <AvatarFallback>{user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : "U"}</AvatarFallback>
           </Avatar>
+          <ChevronDown className="h-4 w-4 text-primary" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[300px] sm:w-[300px]">
+      <SheetContent className="w-[300px] sm:w-[300px] bg-gradient-to-br from-primary/10 via-primary/5 to-background">
         <SheetHeader>
           <SheetTitle>Minha Conta</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col gap-4 py-4">
           <div className="flex items-center gap-4 rounded-lg p-4">
             <Avatar className="h-12 w-12">
-              <AvatarImage src="https://github.com/camilabarpp.png" alt="@camilabarpp" />
-              <AvatarFallback>CB</AvatarFallback>
+              <AvatarImage src={user?.avatar || undefined} alt={user?.name || "@user"} />
+              <AvatarFallback>{user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : "U"}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">Camila Barpp</span>
-              <span className="text-xs text-muted-foreground">camila@email.com</span>
+              <span className="text-sm font-medium">{user?.name || "Usuário"}</span>
+              <span className="text-xs text-muted-foreground">{user?.email || ""}</span>
             </div>
           </div>
           <div className="flex flex-col gap-2">
