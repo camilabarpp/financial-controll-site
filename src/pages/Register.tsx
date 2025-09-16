@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Mail, Lock, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -11,7 +12,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const loginUrl = import.meta.env.VITE_BASE_URL + "/";
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +97,16 @@ export default function Register() {
               {isLoading ? "Criando..." : "Criar Conta"}
             </Button>
           </form>
+          <div className="mt-6 text-center text-muted-foreground text-sm flex flex-col gap-2">
+            <Button
+              type="button"
+              variant="link"
+              className="text-primary text-sm p-0 h-auto"
+              onClick={() => navigate("/login")}
+            >
+              Voltar para login
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

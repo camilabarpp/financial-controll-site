@@ -262,7 +262,7 @@ export const Transactions = () => {
           setSelectedTransaction(null);
         }}
         mode={isEditingTransaction ? 'edit' : 'create'}
-        initialData={selectedTransaction ? {
+        initialData={isEditingTransaction && selectedTransaction ? {
           description: selectedTransaction.description,
           value: selectedTransaction.amount,
           type: selectedTransaction.type,
