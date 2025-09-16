@@ -6,10 +6,16 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
   return <>{children}</>;
 }
 
@@ -35,40 +41,66 @@ const App = () => (
       <Toaster />
       <Sonner />
       <AuthProvider>
-      <BrowserRouter basename={baseURL}>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          
-          <Route
-            element={
-              <PrivateRoute>
-                <div className="flex flex-col min-h-screen bg-background">
-                  <Header />
-                  <main className="flex-1 pb-4">
-                    <div className="max-w-[894px] mx-auto px-4">
-                      <Outlet />
-                    </div>
-                  </main>
-                  <BottomNavigation />
-                </div>
-              </PrivateRoute>
-            }
-          >
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/insights" element={<Insights />} />
-            <Route path="/savings" element={<Savings />} />
-            <Route path="/savings/:id" element={<SavingsGoalDetails />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+        <BrowserRouter basename={baseURL}>
+          <Routes>
+            <Route path="/login" element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            } />
+            <Route path="/register" element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            } />
+            <Route path="/forgot-password" element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            } />
+            
+            <Route
+              element={
+                <PrivateRoute>
+                  <div className="flex flex-col min-h-screen bg-background">
+                    <Header />
+                    <main className="flex-1 pb-4">
+                      <div className="max-w-[894px] mx-auto px-4">
+                        <Outlet />
+                      </div>
+                    </main>
+                    <BottomNavigation />
+                  </div>
+                </PrivateRoute>
+              }
+            >
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/insights" element={<Insights />} />
+              <Route path="/savings" element={<Savings />} />
+              <Route path="/savings/:id" element={<SavingsGoalDetails />} />
+              <Route path="/transactions" element={<Transactions />} />
+              <Route path="/account" element={<Account />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
 
 export default App;

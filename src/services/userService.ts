@@ -1,25 +1,10 @@
+import { http } from '@/utils/httpClient';
+
 export interface UpdateUserPayload {
   name?: string;
   email?: string;
   avatar?: string;
-  password?: string;
 }
-
-export async function updateUser(token: string, data: UpdateUserPayload): Promise<User> {
-  const response = await fetch(`${API_URL}/users/1`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify(data)
-  });
-  if (!response.ok) {
-    throw new Error("Erro ao atualizar usuário");
-  }
-  return response.json();
-}
-// src/services/userService.ts
 
 export interface User {
   id: number;
@@ -29,16 +14,27 @@ export interface User {
   role: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
 
-export async function getMe(token: string): Promise<User> {
-  const response = await fetch(`${API_URL}/me`, {
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
-  });
-  if (!response.ok) {
-    throw new Error("Não autenticado");
-  }
-  return response.json();
+export interface DeleteAccountPayload {
+  password: string;
+}
+
+export async function getMe(): Promise<User> {
+  return http.get<User>('/me');
+}
+
+export async function updateUser(data: UpdateUserPayload): Promise<User> {
+  return http.patch<User>('/users/1', data);
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
+  return http.post('/users/change-password', payload);
+}
+
+export async function deleteUser(payload: DeleteAccountPayload): Promise<void> {
+  return http.post('/users/delete-account', payload);
 }

@@ -1,37 +1,29 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaWallet, FaChartPie, FaCalendarAlt } from "react-icons/fa";
 import { formatCurrency } from "@/utils/format-currency";
+import { getInsights, InsightsData } from "@/services/insightsService";
 
 const Insights = () => {
   const [period, setPeriod] = useState("month");
+  const [data, setData] = useState<InsightsData | null>(null);
 
-  // Mock data for monthly expenses
-  const monthlyData = [
-    { month: "Jun", expenses: 2825.30 },
-    { month: "Jul", expenses: 3100.00 },
-    { month: "Ago", expenses: 2950.20 },
-    { month: "Set", expenses: 3300.40 },
-    { month: "Out", expenses: 2800.10 },
-    { month: "Nov", expenses: 2700.80 },
-    { month: "Dez", expenses: 3500.00 },
-  ];
+  useEffect(() => {
+    const loadData = async () => {
+      const insightsData = await getInsights(period);
+      setData(insightsData);
+    };
+    loadData();
+  }, [period]);
 
-  // Mock data for expenses by category
-  const expenseData = [
-    { name: "Alimentação", value: 845.60, color: "#8A05BE" },
-    { name: "Transporte", value: 320.50, color: "#E53935" },
-    { name: "Entretenimento", value: 180.90, color: "#00C853" },
-    { name: "Saúde", value: 290.00, color: "#FF9800" },
-    { name: "Educação", value: 150.00, color: "#2196F3" },
-    { name: "Outros", value: 125.30, color: "#9C27B0" }
-  ];
+  if (!data) {
+    return <div>Carregando...</div>;
+  }
 
-  const totalExpenses = expenseData.reduce((sum, item) => sum + item.value, 0);
-  const total6Months = monthlyData.reduce((sum, item) => sum + item.expenses, 0);
-
+  const totalExpenses = data.expenseCategory.reduce((sum, item) => sum + item.expenses, 0);
+  const total6Months = data.semesterExpense.reduce((sum, item) => sum + item.expenses, 0);
 
   const calculatePercentage = (value: number) => {
     return ((value / totalExpenses) * 100).toFixed(1);
@@ -41,12 +33,12 @@ const Insights = () => {
     {
       icon: <FaWallet className="text-primary text-xl" />,
       label: "Total gasto",
-      value: formatCurrency(totalExpenses),
+      value: formatCurrency(data.totalExpenses),
     },
     {
       icon: <FaChartPie className="text-primary text-xl" />,
       label: "Categorias",
-      value: `${expenseData.length}`,
+      value: `${data.categoriesCount}`,
     },
     {
       icon: <FaCalendarAlt className="text-primary text-xl" />,
@@ -132,18 +124,18 @@ const Insights = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            {expenseData.map((category, index) => (
+            {data.expenseCategory.map((category, index) => (
               <div key={index} className="flex items-center justify-between px-2 py-2 rounded-lg hover:bg-primary/5 transition">
                 <div className="flex items-center space-x-3">
                   <div 
                     className="w-5 h-5 rounded-full border-2 border-white shadow"
                     style={{ backgroundColor: category.color }}
                   />
-                  <span className="font-medium text-foreground">{category.name}</span>
+                  <span className="font-medium text-foreground">{category.category}</span>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">{calculatePercentage(category.value)}%</p>
-                  <p className="font-bold text-foreground">{formatCurrency(category.value)}</p>
+                  <p className="text-xs text-muted-foreground">{calculatePercentage(category.expenses)}%</p>
+                  <p className="font-bold text-foreground">{formatCurrency(category.expenses)}</p>
                 </div>
               </div>
             ))}
@@ -164,7 +156,7 @@ const Insights = () => {
           <CardContent>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData}>
+                <BarChart data={data.semesterExpense}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis 

@@ -3,14 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from "@/components/ui/drawer";
 import { DeleteAccountModal } from "@/components/DeleteAccountModal";
 import {
   Camera,
   User,
   Lock,
   Mail,
-  Phone,
   Shield,
   Trash2,
   Edit3,
@@ -19,69 +17,28 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect, useContext } from "react";
 import { AuthContext } from "@/contexts/AuthContext";
-import { getMe, updateUser } from "@/services/userService";
+import { updateUser, changePassword, deleteUser } from "@/services/userService";
 import { cn } from "@/utils/utils";
 import { useNavigate } from "react-router-dom";
 
-const Account= () => {
+const Account = () => {
   const navigate = useNavigate();
   const [imageHover, setImageHover] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
-  const { user, login } = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const { user, login, logout } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
     avatar: user?.avatar || ""
   });
-
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name || "",
-        email: user.email || "",
-        avatar: user.avatar || ""
-      });
-    } else {
-      // Busca do backend caso não esteja no contexto
-      const token = localStorage.getItem("token");
-      if (token) {
-        getMe(token).then(u => {
-          setFormData({
-            name: u.name || "",
-            email: u.email || "",
-            avatar: u.avatar || ""
-          });
-        });
-      }
-    }
-  }, [user]);
   const [formErrors, setFormErrors] = useState({
     name: "",
     email: ""
   });
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const avatar = ev.target?.result as string;
-        setFormData(prev => ({ ...prev, avatar }));
-        // Envia imediatamente para o backend
-        const body = {
-          name: formData.name,
-          email: formData.email,
-          avatar
-        };
-        console.log("Body enviado para /account (imagem alterada):", body);
-        // Aqui você pode fazer o fetch/axios para o backend
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -92,27 +49,110 @@ const Account= () => {
     newPassword: "",
     confirmPassword: ""
   });
+  
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        avatar: user.avatar || ""
+      });
+    }
+  }, [user]);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const avatar = ev.target?.result as string;
+        setFormData(prev => ({ ...prev, avatar }));
+        const body = {
+          name: formData.name,
+          email: formData.email,
+          avatar
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleInputChange = (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setFormData(prev => ({
       ...prev,
-      [field]: e.target.value
+      [field]: value
     }));
+
+    // Validação em tempo real para o email
+    if (field === 'email') {
+      if (!value.trim()) {
+        setFormErrors(prev => ({
+          ...prev,
+          email: "Preencha o e-mail"
+        }));
+      } else if (!validateEmail(value)) {
+        setFormErrors(prev => ({
+          ...prev,
+          email: "Digite um e-mail válido"
+        }));
+      } else {
+        setFormErrors(prev => ({
+          ...prev,
+          email: ""
+        }));
+      }
+    }
   };
 
   const handlePasswordChange = (field: keyof typeof passwordData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
+    const newValue = e.target.value;
+    setPasswordData(prev => {
+      const updated = { ...prev, [field]: newValue };
+      
+      // Validação em tempo real para nova senha
+      if (field === 'newPassword' && newValue) {
+        if (newValue.length < 6) {
+          setPasswordErrors(prev => ({
+            ...prev,
+            newPassword: "A senha deve ter pelo menos 6 caracteres"
+          }));
+        } else {
+          setPasswordErrors(prev => ({
+            ...prev,
+            newPassword: ""
+          }));
+        }
+      }
+      
+      // Validação em tempo real para confirmação
+      if (field === 'confirmPassword' && newValue) {
+        if (newValue !== updated.newPassword) {
+          setPasswordErrors(prev => ({
+            ...prev,
+            confirmPassword: "As senhas não coincidem"
+          }));
+        } else {
+          setPasswordErrors(prev => ({
+            ...prev,
+            confirmPassword: ""
+          }));
+        }
+      }
+
+      return updated;
+    });
   };
 
   const handleSaveProfile = async () => {
     let errors = { name: "", email: "" };
     let hasError = false;
+    
     if (!formData.name.trim()) {
       errors.name = "Preencha o nome completo";
       hasError = true;
@@ -120,22 +160,25 @@ const Account= () => {
     if (!formData.email.trim()) {
       errors.email = "Preencha o e-mail";
       hasError = true;
+    } else if (!validateEmail(formData.email)) {
+      errors.email = "Digite um e-mail válido";
+      hasError = true;
     }
+    
     setFormErrors(errors);
     if (hasError) return;
+
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token não encontrado");
-      await updateUser(token, {
+      await updateUser({
         name: formData.name,
         email: formData.email,
         avatar: formData.avatar
       });
-      // Atualiza o contexto do usuário
-      await login(token);
+      
+      await login();
     } catch (error) {
-      // Erro: pode adicionar lógica extra se quiser
+      console.error("Erro ao atualizar perfil:", error);
     } finally {
       setIsLoading(false);
     }
@@ -145,6 +188,7 @@ const Account= () => {
     setIsChangingPassword(true);
     let errors = { currentPassword: "", newPassword: "", confirmPassword: "" };
     let hasError = false;
+    
     if (!passwordData.currentPassword) {
       errors.currentPassword = "Digite sua senha atual";
       hasError = true;
@@ -153,23 +197,31 @@ const Account= () => {
       errors.newPassword = "Digite a nova senha";
       hasError = true;
     }
+    if (!passwordData.confirmPassword) {
+      errors.confirmPassword = "Digite a confirmação da senha";
+      hasError = true;
+    }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       errors.confirmPassword = "As senhas não coincidem";
       hasError = true;
     }
+    if (passwordData.newPassword.length < 6) {
+      errors.newPassword = "A senha deve ter pelo menos 6 caracteres";
+      hasError = true;
+    }
+
     setPasswordErrors(errors);
     if (hasError) {
       setIsChangingPassword(false);
       return;
     }
+
     try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token não encontrado");
-      await updateUser(token, {
-        password: passwordData.newPassword
+      await changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
       });
-      // Atualiza o contexto do usuário
-      await login(token);
+      
       setPasswordData({
         currentPassword: "",
         newPassword: "",
@@ -180,8 +232,16 @@ const Account= () => {
         newPassword: "",
         confirmPassword: ""
       });
+      
+      console.log("Senha alterada com sucesso!");
+      
     } catch (error) {
-      // erro genérico
+      if (error instanceof Error) {
+        setPasswordErrors(prev => ({
+          ...prev,
+          currentPassword: error.message
+        }));
+      }
     } finally {
       setIsChangingPassword(false);
     }
@@ -207,14 +267,16 @@ const Account= () => {
     }
     setIsLoading(true);
     try {
-      // Simulando exclusão
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await deleteUser({ password: deletePassword });
       setDeleteModalOpen(false);
       setDeletePassword("");
       setDeletePasswordError("");
-      navigate("/");
+      logout(); // logout from AuthContext
+      navigate("/login");
     } catch (error) {
-      // erro genérico
+      if (error instanceof Error) {
+        setDeletePasswordError(error.message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -487,10 +549,11 @@ const Account= () => {
                       onClick={handleUpdatePassword}
                       disabled={
                         isChangingPassword ||
-                        !passwordData.currentPassword.trim() ||
-                        !passwordData.newPassword.trim() ||
-                        !passwordData.confirmPassword.trim() ||
-                        passwordData.newPassword !== passwordData.confirmPassword
+                        !passwordData.currentPassword ||
+                        !passwordData.newPassword ||
+                        !passwordData.confirmPassword ||
+                        passwordData.newPassword !== passwordData.confirmPassword ||
+                        passwordData.newPassword.length < 6
                       }
                       className="w-full md:w-auto h-11 px-8"
                     >
