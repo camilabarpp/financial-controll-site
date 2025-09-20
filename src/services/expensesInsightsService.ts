@@ -11,13 +11,13 @@ export interface SemesterExpense {
   expenses: number;
 }
 
-export interface InsightsData {
+export interface ExpensesInsightsData {
   semesterExpense: SemesterExpense[];
   expenseCategory: ExpenseCategory[];
   totalExpenses: number;
   categoriesCount: number;
 }
 
-export async function getInsights(period: string): Promise<InsightsData> {
-  return http.get<InsightsData>(`/insights?period=${period}`);
+export async function getExpensesInsights(period: string): Promise<ExpensesInsightsData> {
+  return http.get<ExpensesInsightsData>(`/expenses?period=${period}`);
 }

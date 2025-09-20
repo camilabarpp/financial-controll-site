@@ -11,13 +11,13 @@ interface SavingsGoalModalProps {
   onClose: () => void;
   onSubmit: (goalData: {
     name: string;
-    savingsTargetValue?: number;
-    savingsDueDate?: string;
+    savingTargetValue?: number;
+    savingDueDate?: string;
   }) => void;
   initialData?: {
     name: string;
-    savingsTargetValue?: number;
-    savingsDueDate?: string;
+    savingTargetValue?: number;
+    savingDueDate?: string;
   };
   mode?: 'create' | 'edit';
 }
@@ -31,9 +31,9 @@ export function SavingsGoalModal({
 }: SavingsGoalModalProps) {
   const [formData, setFormData] = useState({
     name: '',
-    savingsTargetValueFormatted: '',
-    savingsTargetValue: 0,
-    savingsDueDate: ''
+    savingTargetValueFormatted: '',
+    savingTargetValue: 0,
+    savingDueDate: ''
   });
   const [dateError, setDateError] = useState("");
   const { toast } = useToast();
@@ -41,17 +41,17 @@ export function SavingsGoalModal({
 
   useEffect(() => {
     if (initialData) {
-      const formattedDate = initialData.savingsDueDate 
-        ? initialData.savingsDueDate.split('-').reverse().join('/') 
+      const formattedDate = initialData.savingDueDate 
+        ? initialData.savingDueDate.split('-').reverse().join('/') 
         : '';
 
       setFormData({
         name: initialData.name,
-        savingsTargetValueFormatted: initialData.savingsTargetValue 
-          ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(initialData.savingsTargetValue)
+        savingTargetValueFormatted: initialData.savingTargetValue 
+          ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(initialData.savingTargetValue)
           : '',
-        savingsTargetValue: initialData.savingsTargetValue || 0,
-        savingsDueDate: formattedDate
+        savingTargetValue: initialData.savingTargetValue || 0,
+        savingDueDate: formattedDate
       });
     }
   }, [initialData]);
@@ -59,9 +59,9 @@ export function SavingsGoalModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const dateValidation = validateDate(formData.savingsDueDate, true, true);
+    const dateValidation = validateDate(formData.savingDueDate, true, true);
     
-    if (formData.savingsDueDate && !dateValidation.isValid) {
+    if (formData.savingDueDate && !dateValidation.isValid) {
       toast({
         title: "Data inválida",
         description: dateValidation.error,
@@ -72,17 +72,17 @@ export function SavingsGoalModal({
 
     onSubmit({
       name: formData.name,
-      savingsTargetValue: formData.savingsTargetValue || undefined,
-      savingsDueDate: dateValidation.formattedDate
+      savingTargetValue: formData.savingTargetValue || undefined,
+      savingDueDate: dateValidation.formattedDate
     });
   };
 
   const handleClose = () => {
     setFormData({
       name: '',
-      savingsTargetValueFormatted: '',
-      savingsTargetValue: 0,
-      savingsDueDate: ''
+      savingTargetValueFormatted: '',
+      savingTargetValue: 0,
+      savingDueDate: ''
     });
     setDateError('');
     onClose();
@@ -111,20 +111,20 @@ export function SavingsGoalModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Valor total</label>
+            <label className="block text-sm font-medium mb-1">Valor da meta</label>
             <input
               type="text"
               className="w-full border rounded-lg px-3 py-2 bg-background"
               placeholder="R$ 0,00"
-              value={formData.savingsTargetValueFormatted}
+              value={formData.savingTargetValueFormatted}
               onChange={(e) => {
                 const { maskCurrencyInput } = useInputMask();
                 const { maskedValue, numericValue } = maskCurrencyInput(e.target.value);
                 
                 setFormData(prev => ({
                   ...prev,
-                  savingsTargetValueFormatted: maskedValue,
-                  savingsTargetValue: numericValue
+                  savingTargetValueFormatted: maskedValue,
+                  savingTargetValue: numericValue
                 }));
               }}
             />
@@ -137,10 +137,10 @@ export function SavingsGoalModal({
                 maskChar={null}
                 className={`w-full border rounded-lg px-3 py-2 bg-background ${dateError ? 'border-red-500' : ''}`}
                 placeholder="DD/MM/AAAA"
-                value={formData.savingsDueDate}
+                value={formData.savingDueDate}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setFormData(prev => ({ ...prev, savingsDueDate: value }));
+                  setFormData(prev => ({ ...prev, savingDueDate: value }));
                   setDateError(""); 
                   
                   if (value.length === 10 || (value.length > 0 && value.length < 10)) {

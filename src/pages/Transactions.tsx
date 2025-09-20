@@ -3,70 +3,67 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Plus, Filter, ArrowUpRight, ArrowDownRight, Calendar } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { formatCurrency } from "@/utils/format-currency";
 import { formatDate } from "@/utils/format-date";
 import { TransactionModal } from "@/components/TransactionModal";
 import { DeleteTransactionModal } from "@/components/DeleteTransactionModal";
 import { Pencil, Trash2 } from "lucide-react";
+import { createTransaction, deleteTransaction, getAllTransactions, getTransactionTotals, Transaction, TransactionTotals, updateTransaction } from "@/services/transactionsService";
+import { Loading } from "@/components/ui/loading";
+import { Error } from "@/components/ui/error";
+import { set } from "date-fns";
 
 export const Transactions = () => {
   const [filter, setFilter] = useState("all");
-  const [period, setPeriod] = useState("month");
+  type Period = "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+  const [period, setPeriod] = useState<Period>("MONTH");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditingTransaction, setIsEditingTransaction] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [totals, setTotals] = useState<TransactionTotals | null>(null);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  type TransactionType = "INCOME" | "EXPENSE";
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
 
-  interface Transaction {
-    id: number;
-    description: string;
-    amount: number;
-    category: string;
-    date: string;
-    type: TransactionType;
-  }
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  // Mock transactions data
-  const allTransactions: Transaction[] = [
-    { id: 1, description: "Salário", amount: 8500.00, category: "Renda", date: "2024-09-10", type: "INCOME" },
-    { id: 2, description: "Supermercado Extra", amount: 125.50, category: "Alimentação", date: "2024-09-09", type: "EXPENSE" },
-    { id: 3, description: "Netflix", amount: 29.90, category: "Entretenimento", date: "2024-09-08", type: "EXPENSE" },
-    { id: 4, description: "Freelance Design", amount: 450.00, category: "Renda", date: "2024-09-07", type: "INCOME" },
-    { id: 5, description: "Posto Shell", amount: 89.90, category: "Transporte", date: "2024-09-06", type: "EXPENSE" },
-    { id: 6, description: "Academia", amount: 79.90, category: "Saúde", date: "2024-09-05", type: "EXPENSE" },
-    { id: 7, description: "Pix Recebido", amount: 200.00, category: "Transferência", date: "2024-09-04", type: "INCOME" },
-    { id: 8, description: "iFood", amount: 35.60, category: "Alimentação", date: "2024-09-03", type: "EXPENSE" },
-    { id: 9, description: "Farmácia", amount: 45.80, category: "Saúde", date: "2024-09-02", type: "EXPENSE" },
-    { id: 10, description: "Uber", amount: 18.50, category: "Transporte", date: "2024-09-01", type: "EXPENSE" },
-    { id: 11, description: "Spotify", amount: 21.90, category: "Entretenimento", date: "2024-08-31", type: "EXPENSE" },
-    { id: 12, description: "Cashback", amount: 15.20, category: "Outros", date: "2024-08-30", type: "INCOME" },
-  ];
+  useEffect(() => {
+    loadData();
+  }, [period, debouncedSearchTerm]); 
 
-  const filteredTransactions = allTransactions.filter(transaction => {
-    const matchesType = filter === "all" || transaction.type === filter;
-    const searchTermLower = searchTerm.toLowerCase();
-    const matchesSearch = searchTerm === "" || 
-      transaction.description.toLowerCase().includes(searchTermLower) ||
-      transaction.category.toLowerCase().includes(searchTermLower);
-    return matchesType && matchesSearch;
+  const loadData = useCallback(async () => {
+    try {
+      setError(null);
+      setIsLoading(true);
+      setTransactionToDelete(null);
+      setIsEditingTransaction(false);
+      const [transactionsData, totalsData] = await Promise.all([
+        getAllTransactions(period, debouncedSearchTerm),
+        getTransactionTotals(period)
+      ]);
+      setTransactions(transactionsData);
+      setTotals(totalsData);
+    } catch (error) {
+      console.error('Error loading transactions data:', error);
+      setError('Erro ao carregar transações');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [period, debouncedSearchTerm]);
+
+  const filteredTransactions = transactions.filter(transaction => {
+    return filter === "all" || transaction.type === filter;
   });
-
-  const getCategoryColor = (category: string) => {
-    const colors: { [key: string]: string } = {
-      "Renda": "bg-positive text-primary-foreground",
-      "Alimentação": "bg-primary text-primary-foreground",
-      "Entretenimento": "bg-accent text-accent-foreground",
-      "Transporte": "bg-secondary text-secondary-foreground",
-      "Saúde": "bg-success text-success-foreground",
-      "Transferência": "bg-muted text-muted-foreground",
-      "Outros": "bg-neutral text-foreground"
-    };
-    return colors[category] || "bg-muted text-muted-foreground";
-  };
 
   const getTransactionIcon = (type: string) => {
     return type === "INCOME" ? 
@@ -74,21 +71,69 @@ export const Transactions = () => {
       <ArrowDownRight className="h-4 w-4 text-negative" />;
   };
 
+  const totalIncome = totals?.income || 0;
+  const totalExpenses = totals?.expenses || 0;
 
+  const handleSubmit = async (transactionData: {
+    description: string;
+    amount: number;
+    type: "INCOME" | "EXPENSE";
+    date: string;
+    category: string;
+    categoryColor: string;
+  }) => {
+    try {
+      setIsLoading(true);
+      if (isEditingTransaction && selectedTransaction) {
+        await updateTransaction(selectedTransaction.id, transactionData);
+      } else {
+        await createTransaction(transactionData);
+      }
+      await loadData();
+      setIsModalOpen(false);
+      setIsEditingTransaction(false);
+      setSelectedTransaction(null);
+    } catch (error) {
+      console.error('Error saving transaction:', error);
+      setError('Erro ao salvar transação');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // Calculate totals
-  const totalIncome = filteredTransactions
-    .filter(t => t.type === "INCOME")
-    .reduce((sum, t) => sum + t.amount, 0);
-  
-  const totalExpenses = filteredTransactions
-    .filter(t => t.type === "EXPENSE")
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const handleDelete = async () => {
+    try {
+      if (transactionToDelete) {
+        setIsLoading(true);
+        await deleteTransaction(transactionToDelete.id);
+        await loadData();
+        setTransactionToDelete(null);
+        setSelectedTransaction(null);
+      }
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      setError('Erro ao deletar transação');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEdit = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setIsEditingTransaction(true);
+  };
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return <Error message={error} onRetry={loadData} />;
+  }
 
   return (
     <div className="min-h-screen bg-background p-4 pb-20">
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between pt-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Transações</h1>
@@ -99,7 +144,6 @@ export const Transactions = () => {
           </Button>
         </div>
 
-        {/* Summary */}
         <div className="grid grid-cols-2 gap-4">
           <Card>
             <CardContent className="p-4">
@@ -130,7 +174,6 @@ export const Transactions = () => {
           </Card>
         </div>
 
-        {/* Filters */}
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col space-y-4">
@@ -157,15 +200,18 @@ export const Transactions = () => {
                       <SelectItem value="EXPENSE">Despesas</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={period} onValueChange={setPeriod}>
+                  <Select
+                    value={period}
+                    onValueChange={(value) => setPeriod(value as Period)}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="week">Semana</SelectItem>
-                      <SelectItem value="month">Mês</SelectItem>
-                      <SelectItem value="quarter">Trimestre</SelectItem>
-                      <SelectItem value="year">Ano</SelectItem>
+                      <SelectItem value="WEEK">Semana</SelectItem>
+                      <SelectItem value="MONTH">Mês</SelectItem>
+                      <SelectItem value="QUARTER">Trimestre</SelectItem>
+                      <SelectItem value="YEAR">Ano</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -174,7 +220,6 @@ export const Transactions = () => {
           </CardContent>
         </Card>
 
-        {/* Transactions List */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center space-x-2">
@@ -200,8 +245,11 @@ export const Transactions = () => {
                     </p>
                     <div className="flex items-center space-x-2 mt-1">
                       <Badge 
-                        className={`text-xs px-2 py-0.5 truncate max-w-[100px] ${getCategoryColor(transaction.category)}`}
-                      >
+                        className={`text-xs px-2 py-0.5 truncate max-w-[100px]`}
+                        style={{ 
+                          backgroundColor: transaction.categoryColor,
+                          color: '#FFFFFF'
+                         }}>
                         {transaction.category}
                       </Badge>
                     </div>
@@ -222,7 +270,7 @@ export const Transactions = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setIsEditingTransaction(true);
+                          handleEdit(transaction);
                         }}
                         className="p-2 rounded-lg hover:bg-primary/10 transition-colors"
                       >
@@ -253,18 +301,12 @@ export const Transactions = () => {
           setIsEditingTransaction(false);
           setSelectedTransaction(null);
         }}
-        categories={Array.from(new Set(allTransactions.map(t => t.category)))}
-        onSubmit={(transaction) => {
-          // Aqui você implementará a lógica para adicionar/editar a transação
-          console.log(isEditingTransaction ? 'Editando transação:' : 'Nova transação:', transaction);
-          setIsModalOpen(false);
-          setIsEditingTransaction(false);
-          setSelectedTransaction(null);
-        }}
+        categories={Array.from(new Set(transactions.map(t => t.category)))}
+        onSubmit={handleSubmit}
         mode={isEditingTransaction ? 'edit' : 'create'}
-        initialData={isEditingTransaction && selectedTransaction ? {
+        initialData={selectedTransaction ? {
           description: selectedTransaction.description,
-          value: selectedTransaction.amount,
+          amount: selectedTransaction.amount,
           type: selectedTransaction.type,
           date: selectedTransaction.date,
           category: selectedTransaction.category
@@ -274,12 +316,7 @@ export const Transactions = () => {
       <DeleteTransactionModal
         open={!!transactionToDelete}
         onClose={() => setTransactionToDelete(null)}
-        onConfirm={() => {
-          // Aqui você implementará a lógica para excluir a transação
-          console.log('Excluindo transação:', transactionToDelete);
-          setTransactionToDelete(null);
-          setSelectedTransaction(null);
-        }}
+        onConfirm={handleDelete}
       />
     </div>
   );

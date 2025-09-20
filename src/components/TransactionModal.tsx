@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useDateValidation } from "@/hooks/use-date-validation";
 import { useInputMask } from "@/hooks/use-input-mask";
 import InputMask from "react-input-mask";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 import { Combobox } from "./ui/combobox";
 
@@ -14,14 +14,14 @@ interface TransactionModalProps {
   onClose: () => void;
   onSubmit: (transaction: {
     description: string;
-    value: number;
+    amount: number;
     type: "INCOME" | "EXPENSE";
     date: string;
     category: string;
   }) => void;
   initialData?: {
     description: string;
-    value: number;
+    amount: number;
     type: "INCOME" | "EXPENSE";
     date: string;
     category: string;
@@ -54,8 +54,8 @@ export function TransactionModal({
         valueFormatted: new Intl.NumberFormat('pt-BR', {
           style: 'currency',
           currency: 'BRL'
-        }).format(initialData.value),
-        value: initialData.value,
+        }).format(initialData.amount),
+        value: initialData.amount,
         type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
         date: initialData.date.split('-').reverse().join('/'),
         category: initialData.category
@@ -111,7 +111,7 @@ export function TransactionModal({
 
     onSubmit({
       description: formData.description,
-      value: formData.value,
+      amount: formData.value,
       type: formData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
       date: submissionDate,
       category: finalCategory
@@ -131,8 +131,8 @@ export function TransactionModal({
         valueFormatted: new Intl.NumberFormat('pt-BR', {
           style: 'currency',
           currency: 'BRL'
-        }).format(initialData.value),
-        value: initialData.value,
+        }).format(initialData.amount),
+        value: initialData.amount,
         type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
         date: initialData.date.split('-').reverse().join('/'),
         category: initialData.category
@@ -141,6 +141,24 @@ export function TransactionModal({
 
     onClose();
   };
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        description: initialData.description,
+        valueFormatted: new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(initialData.amount),
+        value: initialData.amount,
+        type: initialData.type,
+        date: initialData.date.split('-').reverse().join('/'),
+        category: initialData.category
+      });
+    } else {
+      setFormData(emptyFormData);
+    }
+  }, [initialData]);
 
   const allCategories = [...new Set([...categories, newCategory].filter(Boolean))];
 

@@ -7,7 +7,7 @@ import { ProfileSheet } from "./ProfileSheet";
 const Header = () => {
   const navItems = [
     { to: "/", label: "Dashboard" },
-    { to: "/insights", label: "Gastos" },
+    { to: "/expenses", label: "Gastos" },
     { to: "/savings", label: "Economias" },
     { to: "/transactions", label: "Transações" },
   ];

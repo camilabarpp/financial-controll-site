@@ -71,6 +71,21 @@ class HttpClient {
       body: JSON.stringify(data),
     });
   }
+
+  put<T>(endpoint: string, data?: unknown, config: RequestConfig = {}) {
+    return this.request<T>(endpoint, {
+      ...config,
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  delete<T>(endpoint: string, config: RequestConfig = {}) {
+    return this.request<T>(endpoint, {
+      ...config,
+      method: 'DELETE',
+    });
+  }
 }
 
 export const http = new HttpClient(API_URL);

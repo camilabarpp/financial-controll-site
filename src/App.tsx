@@ -24,7 +24,7 @@ import Register from "@/pages/Register";
 import ForgotPassword from "@/pages/ForgotPassword";
 import Header from "./components/Header";
 import Dashboard from "./pages/Dashboard";
-import Insights from "./pages/Insights";
+import ExpensesInsights from "./pages/ExpensesInsights";
 import Savings from "./pages/Savings";
 import NotFound from "./pages/NotFound";
 import BottomNavigation from "./components/BottomNavigation";
@@ -75,7 +75,7 @@ const App = () => (
               }
             >
               <Route path="/" element={<Dashboard />} />
-              <Route path="/insights" element={<Insights />} />
+              <Route path="/expenses" element={<ExpensesInsights />} />
               <Route path="/savings" element={<Savings />} />
               <Route path="/savings/:id" element={<SavingsGoalDetails />} />
               <Route path="/transactions" element={<Transactions />} />

@@ -7,28 +7,48 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/utils/format-currency";
 import { Link } from "react-router-dom";
 import { formatDate } from "@/utils/format-date";
-import { Balance, getBalance, getRecentTransactions, Transaction } from "@/services/financialService";
+import { Balance, getBalance, getRecentTransactions, Transaction } from "@/services/transactionsService";
+import { Loading } from "@/components/ui/loading";
+import { Error } from "@/components/ui/error";
 
 const Dashboard = () => {
   const [showBalance, setShowBalance] = useState(false);
   const [balance, setBalance] = useState<Balance | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const { user } = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadData = async () => {
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+          
       const [balanceData, transactionsData] = await Promise.all([
         getBalance(),
         getRecentTransactions()
       ]);
+      
       setBalance(balanceData);
       setRecentTransactions(transactionsData);
-    };
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      setError('Erro ao carregar dados do painel');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
 
-  if (!balance) {
-    return <div>Carregando...</div>;
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return <Error message={error} onRetry={loadData} />;
   }
 
   return (
@@ -84,7 +104,6 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Available Balance */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -124,7 +143,7 @@ const Dashboard = () => {
                           variant="secondary"
                           style={{ 
                             backgroundColor: transaction.categoryColor,
-                            color: '#FFFFFF' // white text for better contrast
+                            color: '#FFFFFF'
                           }}
                         >
                           {transaction.category}

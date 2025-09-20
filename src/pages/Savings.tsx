@@ -3,56 +3,65 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Target, TrendingUp, Plus, Wallet, ArrowDownRight, ArrowUpRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SavingsGoalModal } from "@/components/SavingsGoalModal";
 import { formatCurrency } from "@/utils/format-currency";
 import { formatTimeRemaining } from "@/utils/format-time-remaining";
 import { formatDate } from "@/utils/format-date";
 import { calculateExpectedCompletion } from "@/utils/calculate-expected-saving_goal_completion";
+import { getAllSavingsGoals, getSavingsGoalTotals, createSavingsGoal, SavingsGoal, SavingsGoalTotals } from "@/services/savingsService";
+import { Loading } from "@/components/ui/loading";
+import { Error } from "@/components/ui/error";
 
 const Savings = () => {
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
+  const [totals, setTotals] = useState<SavingsGoalTotals | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const navigate = useNavigate();
 
-  interface SavingsGoal {
-    id: number;
-    name: string;
-    savingsTargetValue?: number;
-    current: number;
-    lastSaved?: number;
-    savingsDueDate?: string;
-  }
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  const savingsGoals: SavingsGoal[] = [
-    {
-      id: 1,
-      name: "Viagem Europa",
-      savingsTargetValue: 15000,
-      current: 8750,
-      lastSaved: 1250,
-      savingsDueDate: "2027-09-20T00:00:00.000Z"
-    },
-    {
-      id: 2,
-      name: "Emergência",
-      lastSaved: 2000,
-      current: 12400
-    },
-    {
-      id: 3,
-      name: "Casa Nova",
-      savingsTargetValue: 80000,
-      current: 35000,
-      lastSaved: 2500
-    },
-    {
-      id: 4,
-      name: "Carro Novo",
-      savingsDueDate: "2026-12-31T00:00:00.000Z",
-      current: 15750,
-      savingsTargetValue: 45000,
-      lastSaved: 3000.00
+  const loadData = async () => {
+    try {
+      setError(null);
+      setIsLoading(true);
+      const [goalsData, totalsData] = await Promise.all([
+        getAllSavingsGoals(),
+        getSavingsGoalTotals()
+      ]);
+      setSavingsGoals(goalsData);
+      setTotals(totalsData);
+    } catch (error) {
+      console.error('Error loading savings data:', error);
+      setError('Erro ao carregar dados das economias');
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
+
+  const handleAddGoal = async (goalData: {
+    name: string;
+    savingTargetValue?: number;
+    savingDueDate?: string;
+  }) => {
+    try {
+      setIsLoading(true);
+      await createSavingsGoal(goalData);
+      await loadData();
+      setIsAddingGoal(false);
+    } catch (error) {
+      console.error('Error creating savings goal:', error);
+      setError('Erro ao criar meta de economia');
+    } finally {
+      setIsAddingGoal(false);
+      setIsLoading(false);
+    }
+  };
 
   const calculateProgress = (current: number, target?: number) => {
     if (!target) return undefined;
@@ -66,32 +75,13 @@ const Savings = () => {
     return "text-primary";
   };
 
-  const getTotalSavings = () => {
-    return savingsGoals.reduce((total, goal) => total + goal.current, 0);
-  };
+  if (isLoading) {
+    return <Loading />;
+  }
 
-  const getTotalIncome = () => {
-    const thisMonth = new Date().getMonth();
-    return savingsGoals.reduce((total, goal) => total + (goal.lastSaved || 0), 0);
-  };
-
-  const getTotalExpenses = () => {
-    // Em um cenário real, você teria um histórico de retiradas
-    // Por enquanto vamos simular um valor
-    return 1500;
-  };
-
-  const navigate = useNavigate();
-  const [isAddingGoal, setIsAddingGoal] = useState(false);
-
-  const handleAddGoal = (goalData: {
-    name: string;
-    savingsTargetValue?: number;
-    savingsDueDate?: string;
-  }) => {
-    console.log('Nova meta:', goalData);
-    setIsAddingGoal(false);
-  };
+  if (error) {
+    return <Error message={error} onRetry={loadData} />;
+  }
 
   return (
     <>
@@ -116,20 +106,20 @@ const Savings = () => {
                   Total Acumulado
                 </span>
                 <span className="text-3xl font-bold text-primary-foreground">
-                  {formatCurrency(getTotalSavings())}
+                  {formatCurrency(totals.monthlyIncome || 0)}
                 </span>
               </div>
               <div className="flex justify-between mt-4 gap-4">
                 <div className="flex items-center space-x-2">
                   <div>
                     <p className="text-xs text-primary-foreground/80">Aportes do Mês</p>
-                    <p className="font-medium text-primary-foreground">{formatCurrency(getTotalIncome())}</p>
+                    <p className="font-medium text-primary-foreground">{formatCurrency(totals.monthlyIncome || 0)}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div>
                     <p className="text-xs text-primary-foreground/80">Retiradas do Mês</p>
-                    <p className="font-medium text-primary-foreground">{formatCurrency(getTotalExpenses())}</p>
+                    <p className="font-medium text-primary-foreground">{formatCurrency(totals.monthlyExpenses || 0)}</p>
                   </div>
                 </div>
               </div>
@@ -140,9 +130,9 @@ const Savings = () => {
 
         <div className="space-y-4">
           {savingsGoals.map((goal) => {
-            const progress = calculateProgress(goal.current, goal.savingsTargetValue);
+            const progress = calculateProgress(goal.current, goal.savingTargetValue);
             const isCompleted = progress !== undefined && progress >= 100;
-            const hasTarget = goal.savingsTargetValue !== undefined;
+            const hasTarget = goal.savingTargetValue !== undefined;
             
             return (
               <Card key={goal.id} className="overflow-hidden cursor-pointer" onClick={() => navigate(`/savings/${goal.id}`)}>
@@ -151,11 +141,11 @@ const Savings = () => {
                     <div className="flex items-center space-x-3">
                       <div>
                         <CardTitle className="text-lg">{goal.name}</CardTitle>
-                        {goal.savingsDueDate && !isCompleted && (
+                        {goal.savingDueDate && !isCompleted && (
                           <div className="flex items-center space-x-2 mt-1">
                             <Badge variant="secondary" className="text-xs">
                               <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                              {formatTimeRemaining(goal.savingsDueDate)}
+                              {formatTimeRemaining(goal.savingDueDate)}
                             </Badge>
                           </div>
                         )}
@@ -185,7 +175,7 @@ const Savings = () => {
                           {formatCurrency(goal.current)}
                         </span>
                         <span className="text-muted-foreground">
-                          {formatCurrency(goal.savingsTargetValue)}
+                          {formatCurrency(goal.savingTargetValue)}
                         </span>
                       </div>
                     </div>
@@ -195,18 +185,18 @@ const Savings = () => {
                       <div className="flex items-center space-x-2">
                         <Target className="h-4 w-4 text-primary" />
                         <span className="text-muted-foreground">
-                          {goal.savingsDueDate ? "Previsão" : "Último aporte"}
+                          {goal.savingDueDate ? "Previsão" : "Último aporte"}
                         </span>
                       </div>
                       <span className={`font-medium ${
-                        goal.savingsDueDate && calculateExpectedCompletion(goal.current, goal.savingsTargetValue!, goal.lastSaved) && 
-                        new Date(goal.savingsDueDate) < calculateExpectedCompletion(goal.current, goal.savingsTargetValue!, goal.lastSaved)!
+                        goal.savingDueDate && calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved) && 
+                        new Date(goal.savingDueDate) < calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved)!
                           ? "text-destructive"
                           : "text-foreground"
                       }`}>
-                        {goal.savingsDueDate ? (
-                          calculateExpectedCompletion(goal.current, goal.savingsTargetValue!, goal.lastSaved) ? 
-                            formatDate(calculateExpectedCompletion(goal.current, goal.savingsTargetValue!, goal.lastSaved)!) :
+                        {goal.savingDueDate ? (
+                          calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved) ? 
+                            formatDate(calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved)!) :
                             "Ritmo insuficiente"
                         ) : (
                           formatCurrency(goal.lastSaved)
@@ -223,7 +213,7 @@ const Savings = () => {
                     </div>
                     <span className="font-medium text-foreground">
                       {hasTarget && !isCompleted 
-                        ? formatCurrency(goal.savingsTargetValue - goal.current)
+                        ? formatCurrency(goal.savingTargetValue - goal.current)
                         : formatCurrency(goal.current)
                       }
                     </span>

@@ -6,7 +6,7 @@ const BottomNavigation = () => {
 
   const navItems = [
     { name: "Início", icon: Home, path: "/" },
-    { name: "Gastos", icon: BarChart3, path: "/insights" },
+    { name: "Gastos", icon: BarChart3, path: "/expenses" },
     { name: "Economias", icon: PiggyBank, path: "/savings" },
     { name: "Extrato", icon: Receipt, path: "/transactions" },
   ];

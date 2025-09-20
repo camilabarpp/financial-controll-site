@@ -4,15 +4,15 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useState, useEffect } from "react";
 import { FaWallet, FaChartPie, FaCalendarAlt } from "react-icons/fa";
 import { formatCurrency } from "@/utils/format-currency";
-import { getInsights, InsightsData } from "@/services/insightsService";
+import { getExpensesInsights, ExpensesInsightsData } from "@/services/expensesInsightsService";
 
-const Insights = () => {
+const ExpensesInsights = () => {
   const [period, setPeriod] = useState("month");
-  const [data, setData] = useState<InsightsData | null>(null);
+  const [data, setData] = useState<ExpensesInsightsData | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
-      const insightsData = await getInsights(period);
+      const insightsData = await getExpensesInsights(period);
       setData(insightsData);
     };
     loadData();
@@ -181,4 +181,4 @@ const Insights = () => {
   );
 };
 
-export default Insights;
+export default ExpensesInsights;
