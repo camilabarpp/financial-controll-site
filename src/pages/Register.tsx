@@ -4,8 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useResetScroll } from "@/hooks/useResetScroll";
 
 export default function Register() {
+  useResetScroll();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

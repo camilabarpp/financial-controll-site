@@ -13,8 +13,10 @@ import { calculateExpectedCompletion } from "@/utils/calculate-expected-saving_g
 import { getAllSavingsGoals, getSavingsGoalTotals, createSavingsGoal, SavingsGoal, SavingsGoalTotals } from "@/services/savingsService";
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
+import { useResetScroll } from "@/hooks/useResetScroll";
 
 const Savings = () => {
+  useResetScroll();
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
   const [totals, setTotals] = useState<SavingsGoalTotals | null>(null);
   const [isLoading, setIsLoading] = useState(true);

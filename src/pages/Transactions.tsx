@@ -9,12 +9,13 @@ import { formatDate } from "@/utils/format-date";
 import { TransactionModal } from "@/components/TransactionModal";
 import { DeleteTransactionModal } from "@/components/DeleteTransactionModal";
 import { Pencil, Trash2 } from "lucide-react";
-import { createTransaction, deleteTransaction, getAllTransactions, getTransactionTotals, Transaction, TransactionTotals, updateTransaction } from "@/services/transactionsService";
+import { createTransaction, deleteTransaction, getAllTransactions, getTransactionTotals, Transaction, TransactionTotals, updateTransaction, SortOrder } from "@/services/transactionsService";
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
-import { set } from "date-fns";
+import { useResetScroll } from "@/hooks/useResetScroll";
 
 export const Transactions = () => {
+  useResetScroll();
   const [filter, setFilter] = useState("all");
   type Period = "WEEK" | "MONTH" | "QUARTER" | "YEAR";
   const [period, setPeriod] = useState<Period>("MONTH");
@@ -28,6 +29,7 @@ export const Transactions = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -39,7 +41,7 @@ export const Transactions = () => {
 
   useEffect(() => {
     loadData();
-  }, [period, debouncedSearchTerm]); 
+  }, [period, debouncedSearchTerm, sortOrder]); 
 
   const loadData = useCallback(async () => {
     try {
@@ -48,7 +50,7 @@ export const Transactions = () => {
       setTransactionToDelete(null);
       setIsEditingTransaction(false);
       const [transactionsData, totalsData] = await Promise.all([
-        getAllTransactions(period, debouncedSearchTerm),
+        getAllTransactions(period, debouncedSearchTerm, sortOrder),
         getTransactionTotals(period)
       ]);
       setTransactions(transactionsData);
@@ -59,7 +61,7 @@ export const Transactions = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [period, debouncedSearchTerm]);
+  }, [period, debouncedSearchTerm, sortOrder]);
 
   const filteredTransactions = transactions.filter(transaction => {
     return filter === "all" || transaction.type === filter;
@@ -189,10 +191,10 @@ export const Transactions = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Select value={filter} onValueChange={setFilter}>
                     <SelectTrigger className="w-full">
-                      <SelectValue />
+                      <SelectValue placeholder="Tipo" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas</SelectItem>
@@ -200,18 +202,33 @@ export const Transactions = () => {
                       <SelectItem value="EXPENSE">Despesas</SelectItem>
                     </SelectContent>
                   </Select>
+
                   <Select
                     value={period}
                     onValueChange={(value) => setPeriod(value as Period)}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue />
+                      <SelectValue placeholder="Período" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="WEEK">Semana</SelectItem>
                       <SelectItem value="MONTH">Mês</SelectItem>
                       <SelectItem value="QUARTER">Trimestre</SelectItem>
                       <SelectItem value="YEAR">Ano</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={sortOrder}
+                    onValueChange={(value) => setSortOrder(value as SortOrder)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Ordenar por" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={null}>Ordernar por</SelectItem>
+                      <SelectItem value="DESC">Maior valor</SelectItem>
+                      <SelectItem value="ASC">Menor valor</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

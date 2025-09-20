@@ -20,8 +20,10 @@ import { AuthContext } from "@/contexts/AuthContext";
 import { updateUser, changePassword, deleteUser } from "@/services/userService";
 import { cn } from "@/utils/utils";
 import { useNavigate } from "react-router-dom";
+import { useResetScroll } from "@/hooks/useResetScroll";
 
 const Account = () => {
+  useResetScroll();
   const navigate = useNavigate();
   const [imageHover, setImageHover] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

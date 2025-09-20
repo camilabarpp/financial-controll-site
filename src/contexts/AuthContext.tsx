@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 
 import { getMe, User } from "@/services/userService";
+import { Loading } from "@/components/ui/loading";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -72,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   if (isLoading) {
-    return null; // ou um componente de loading
+    return <Loading />;
   }
 
   return (

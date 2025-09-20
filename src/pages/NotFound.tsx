@@ -2,8 +2,10 @@ import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { HomeIcon } from "lucide-react";
+import { useResetScroll } from "@/hooks/useResetScroll";
 
 const NotFound = () => {
+  useResetScroll();
   const location = useLocation();
 
   useEffect(() => {

@@ -5,25 +5,50 @@ import { useState, useEffect } from "react";
 import { FaWallet, FaChartPie, FaCalendarAlt } from "react-icons/fa";
 import { formatCurrency } from "@/utils/format-currency";
 import { getExpensesInsights, ExpensesInsightsData } from "@/services/expensesInsightsService";
+import { Loading } from "@/components/ui/loading";
+import { Error } from "@/components/ui/error";
+import { useResetScroll } from "@/hooks/useResetScroll";
 
 const ExpensesInsights = () => {
-  const [period, setPeriod] = useState("month");
-  const [data, setData] = useState<ExpensesInsightsData | null>(null);
+  useResetScroll();
+  type Period = "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+  const [period, setPeriod] = useState<Period>("MONTH");
+  const [expenses, setExpenses] = useState<ExpensesInsightsData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadData = async () => {
-      const insightsData = await getExpensesInsights(period);
-      setData(insightsData);
-    };
     loadData();
   }, [period]);
 
-  if (!data) {
-    return <div>Carregando...</div>;
+  const loadData = async () => {
+    try {
+      setError(null);
+      setIsLoading(true);
+      const insightsData = await getExpensesInsights(period);
+      setExpenses(insightsData);
+    } catch (error) {
+      console.error(error);
+      setError("Erro ao carregar dados");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return <Loading />;
   }
 
-  const totalExpenses = data.expenseCategory.reduce((sum, item) => sum + item.expenses, 0);
-  const total6Months = data.semesterExpense.reduce((sum, item) => sum + item.expenses, 0);
+  if (error) {
+    return <Error message={error} onRetry={loadData} />;
+  }
+
+  if (!expenses) {
+    return <Error message="Nenhum dado encontrado" />;
+  }
+
+  const totalExpenses = expenses.expenseCategory.reduce((sum, item) => sum + item.expenses, 0);
+  const total6Months = expenses.semesterExpense.reduce((sum, item) => sum + item.expenses, 0);
 
   const calculatePercentage = (value: number) => {
     return ((value / totalExpenses) * 100).toFixed(1);
@@ -33,17 +58,17 @@ const ExpensesInsights = () => {
     {
       icon: <FaWallet className="text-primary text-xl" />,
       label: "Total gasto",
-      value: formatCurrency(data.totalExpenses),
+      value: formatCurrency(expenses.totalExpenses),
     },
     {
       icon: <FaChartPie className="text-primary text-xl" />,
       label: "Categorias",
-      value: `${data.categoriesCount}`,
+      value: `${expenses.categoriesCount}`,
     },
     {
       icon: <FaCalendarAlt className="text-primary text-xl" />,
       label: "Período",
-      value: period === "month" ? "Este mês" : period === "week" ? "Esta semana" : period === "day" ? "Hoje" : "Este ano",
+      value: period === "WEEK" ? "Esta semana" : period === "MONTH" ? "Este mês" : period === "QUARTER" ? "Este trimestre" : "Este ano",
     },
   ];
 
@@ -60,17 +85,6 @@ const ExpensesInsights = () => {
             <CardHeader>
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-lg">Resumo</CardTitle>
-                <Select value={period} onValueChange={setPeriod}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Selecione o período" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="day">Hoje</SelectItem>
-                    <SelectItem value="week">Esta semana</SelectItem>
-                    <SelectItem value="month">Este mês</SelectItem>
-                    <SelectItem value="year">Este ano</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </CardHeader>
             
@@ -97,15 +111,15 @@ const ExpensesInsights = () => {
             <div className="flex flex-col space-y-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">Gastos por Categoria</CardTitle>
-                <Select value={period} onValueChange={setPeriod}>
+                  <Select value={period} onValueChange={(value) => setPeriod(value as Period)}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Selecione o período" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="day">Hoje</SelectItem>
-                    <SelectItem value="week">Esta semana</SelectItem>
-                    <SelectItem value="month">Este mês</SelectItem>
-                    <SelectItem value="year">Este ano</SelectItem>
+                    <SelectItem value="WEEK">Esta semana</SelectItem>
+                    <SelectItem value="MONTH">Este mês</SelectItem>
+                    <SelectItem value="QUARTER">Este trimestre</SelectItem>
+                    <SelectItem value="YEAR">Este ano</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -124,7 +138,7 @@ const ExpensesInsights = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            {data.expenseCategory.map((category, index) => (
+            {expenses.expenseCategory.map((category, index) => (
               <div key={index} className="flex items-center justify-between px-2 py-2 rounded-lg hover:bg-primary/5 transition">
                 <div className="flex items-center space-x-3">
                   <div 
@@ -156,7 +170,7 @@ const ExpensesInsights = () => {
           <CardContent>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.semesterExpense}>
+                <BarChart data={expenses.semesterExpense}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis 

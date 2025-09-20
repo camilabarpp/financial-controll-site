@@ -21,9 +21,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { deleteSavingsGoal, deleteSavingGoalTransaction, getSavingGoalSemesterTransactions, getSavingGoalTransactions, SavingGoalDetail, SavingGoalSemesterTransactions, SavingGoalTransactions, updateSavingsGoal } from "@/services/savingsService";
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
-
+import { useResetScroll } from "@/hooks/useResetScroll";
 
 const SavingsGoalDetails = () => {
+  useResetScroll();
   const navigate = useNavigate();
   const { id } = useParams();
   const [savingsData, setSavingsData] = useState<SavingGoalDetail | null>(null);

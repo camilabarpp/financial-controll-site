@@ -24,6 +24,8 @@ export interface TransactionTotals {
   total: number;
 }
 
+export type SortOrder = '' | 'ASC' | 'DESC';
+
 export async function getBalance(): Promise<Balance> {
   return http.get<Balance>('/balance');
 }
@@ -32,9 +34,17 @@ export async function getRecentTransactions(): Promise<Transaction[]> {
   return http.get<Transaction[]>('/transactions/recent');
 }
 
-export async function getAllTransactions(period: string, search?: string): Promise<Transaction[]> {
-  const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
-  return http.get<Transaction[]>(`/transactions?period=${period}${searchParam}`);
+export async function getAllTransactions(
+  period: string, 
+  search?: string,
+  sort?: SortOrder
+): Promise<Transaction[]> {
+  const params = new URLSearchParams();
+  if (period) params.append('period', period);
+  if (search) params.append('search', search);
+  params.append('sort', sort);
+
+  return http.get<Transaction[]>(`/transactions?${params.toString()}`);
 }
 
 export async function createTransaction(transaction: Omit<Transaction, 'id'>): Promise<Transaction> {

@@ -8,8 +8,10 @@ import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { loginService, saveToken } from "@/services/authService";
 import { AuthContext } from "@/contexts/AuthContext";
+import { useResetScroll } from "@/hooks/useResetScroll";
 
 export default function Login() {
+  useResetScroll();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +31,7 @@ export default function Login() {
     try {
       const { token } = await loginService({ email, password });
       saveToken(token);
-      login(token);
+      login();
       navigate("/");
     } catch (err: any) {
       setError(err.message || "Erro ao fazer login");

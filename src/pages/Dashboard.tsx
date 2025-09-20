@@ -10,8 +10,10 @@ import { formatDate } from "@/utils/format-date";
 import { Balance, getBalance, getRecentTransactions, Transaction } from "@/services/transactionsService";
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
+import { useResetScroll } from "@/hooks/useResetScroll";
 
 const Dashboard = () => {
+  useResetScroll();
   const [showBalance, setShowBalance] = useState(false);
   const [balance, setBalance] = useState<Balance | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
