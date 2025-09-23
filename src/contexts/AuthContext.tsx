@@ -9,7 +9,8 @@ interface AuthContextType {
   user: User | null;
   login: () => Promise<void>;
   logout: () => void;
-  isLoading: boolean; 
+  isLoading: boolean;
+  setUser: (user: User | null) => void; 
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -18,6 +19,7 @@ export const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: () => {},
   isLoading: true,
+  setUser: () => {}
 });
 
 export function useAuth() {
@@ -62,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Erro ao fazer login:", error);
       logout();
-      throw error; // Propagar o erro para tratamento na tela de login
+      throw error;
     }
   };
 
@@ -77,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, isLoading, setUser }}>
       {children}
     </AuthContext.Provider>
   );

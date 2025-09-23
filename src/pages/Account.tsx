@@ -31,7 +31,7 @@ const Account = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const { user, login, logout } = useContext(AuthContext);
+  const { user, login, logout, setUser } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -172,13 +172,14 @@ const Account = () => {
 
     setIsLoading(true);
     try {
-      await updateUser({
+      const updatedUser = await updateUser({
         name: formData.name,
         email: formData.email,
         avatar: formData.avatar
       });
-      
-      await login();
+      // Atualiza o contexto do usuário imediatamente
+      if (setUser) setUser(updatedUser);
+      // Opcional: await login(); // se login() faz fetch do usuário, pode remover se não precisar
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error);
     } finally {
@@ -302,8 +303,24 @@ const Account = () => {
                       onMouseLeave={() => setImageHover(false)}
                     >
                       <AvatarImage src={formData.avatar} alt="avatar" />
-                      <AvatarFallback className="text-xl font-semibold">CB</AvatarFallback>
+                      <AvatarFallback className="text-xl font-semibold">
+                        {/* Mostra as iniciais do nome do usuário logado */}
+                        {formData.name
+                          ? formData.name
+                              .split(" ")
+                              .map(n => n[0])
+                              .join("")
+                              .toUpperCase()
+                          : "U"}
+                      </AvatarFallback>
                     </Avatar>
+                    {/* Ícone de lápis no canto inferior direito */}
+                    <span
+                      className="absolute bottom-2 right-2 bg-primary rounded-full p-1 shadow-lg flex items-center justify-center"
+                      style={{ pointerEvents: "none" }}
+                    >
+                      <Edit3 className="w-5 h-5 text-white" />
+                    </span>
                     <label
                       className={cn(
                         "absolute inset-0 bg-black/60 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer",

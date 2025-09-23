@@ -124,9 +124,9 @@ const Dashboard = () => {
           <CardHeader>
             <CardTitle className="text-lg">Transações Recentes</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent>
             {recentTransactions.map((transaction) => (
-              <div key={transaction.id} className="group flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors relative">
+              <div key={transaction.id} className="group flex items-center justify-between pb-3 rounded-lg hover:bg-muted/50 transition-colors relative">
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                   <div className="flex-shrink-0">
                     {transaction.type === 'INCOME' ? 

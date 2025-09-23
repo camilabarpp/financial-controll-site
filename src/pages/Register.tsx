@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useResetScroll } from "@/hooks/useResetScroll";
+import { register } from "@/services/userService";
 
 export default function Register() {
   useResetScroll();
@@ -16,21 +17,42 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Função para validar e-mail simples
+  function isValidEmail(email: string) {
+    return /\S+@\S+\.\S+/.test(email);
+  }
+
+  // Função para validar senha (mínimo 6 caracteres)
+  function isStrongPassword(password: string) {
+    return password.length >= 6;
+  }
+
+  const isFormInvalid =
+    !name.trim() ||
+    !email.trim() ||
+    !password.trim() ||
+    !confirmPassword.trim() ||
+    !isValidEmail(email) ||
+    password !== confirmPassword ||
+    !isStrongPassword(password);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      setError("Preencha todos os campos");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("As senhas não coincidem");
+    if (isFormInvalid) {
+      setError("Preencha todos os campos corretamente");
       return;
     }
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    setIsLoading(false);
-    // Aqui você pode redirecionar ou mostrar erro
+    try {
+      await register({ name, email, password });
+      // Redireciona para login após cadastro bem-sucedido
+      navigate("/login");
+    } catch (err: any) {
+      setError(err?.message || "Erro ao criar conta.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -94,7 +116,7 @@ export default function Register() {
             <Button
               type="submit"
               className="w-full h-11 text-lg font-semibold bg-primary hover:bg-primary/90 transition-all"
-              disabled={isLoading}
+              disabled={isLoading || isFormInvalid}
             >
               {isLoading ? "Criando..." : "Criar Conta"}
             </Button>

@@ -244,7 +244,7 @@ export const Transactions = () => {
               <span>Histórico ({filteredTransactions.length})</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent>
             {filteredTransactions.map((transaction) => (
               <div 
                 key={transaction.id} 
