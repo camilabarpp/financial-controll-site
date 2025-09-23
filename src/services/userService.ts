@@ -23,6 +23,10 @@ export interface DeleteAccountPayload {
   password: string;
 }
 
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
 export async function getMe(): Promise<User> {
   return http.get<User>('/me');
 }
@@ -37,4 +41,8 @@ export async function changePassword(payload: ChangePasswordPayload): Promise<vo
 
 export async function deleteUser(payload: DeleteAccountPayload): Promise<void> {
   return http.post('/users/delete-account', payload);
+}
+
+export async function forgotPassword(payload: ForgotPasswordPayload): Promise<{ message: string }> {
+  return http.post<{ message: string }>('/forgot-password', payload, { requiresAuth: false });
 }

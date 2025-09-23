@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useResetScroll } from "@/hooks/useResetScroll";
-
+import { forgotPassword } from "@/services/userService";
 export default function ForgotPassword() {
   useResetScroll();
   const [email, setEmail] = useState("");
@@ -23,9 +23,15 @@ export default function ForgotPassword() {
       return;
     }
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    setIsLoading(false);
-    setSuccess("Enviamos um link de recuperação para seu e-mail.");
+    try {
+      const response = await forgotPassword({ email });
+      setSuccess(response.message);
+    } catch (err: any) {
+      setError(err?.message || "Erro ao enviar e-mail de recuperação.");
+      console.error("Erro ao enviar e-mail de recuperação:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

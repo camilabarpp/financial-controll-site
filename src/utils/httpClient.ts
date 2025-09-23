@@ -4,6 +4,12 @@ interface RequestConfig extends RequestInit {
   requiresAuth?: boolean;
 }
 
+const publicEndpoints = [
+  '/forgot-password',
+  '/login',
+  '/register'
+];
+
 class HttpClient {
   private baseUrl: string;
 
@@ -19,7 +25,8 @@ class HttpClient {
       ...fetchConfig.headers,
     };
 
-    if (requiresAuth) {
+    // Só exige token se requiresAuth for true e não for endpoint público
+    if (requiresAuth && !publicEndpoints.includes(endpoint)) {
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('Token não encontrado');
