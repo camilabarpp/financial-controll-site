@@ -6,13 +6,13 @@ export interface ExpenseCategory {
   color: string;
 }
 
-export interface SemesterExpense {
+export interface GroupedExpenses {
   month: string;
   expenses: number;
 }
 
 export interface ExpensesInsightsData {
-  semesterExpense: SemesterExpense[];
+  groupedExpenses: GroupedExpenses[];
   expenseCategory: ExpenseCategory[];
   totalExpenses: number;
   categoriesCount: number;

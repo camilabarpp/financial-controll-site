@@ -87,10 +87,11 @@ class HttpClient {
     });
   }
 
-  delete<T>(endpoint: string, config: RequestConfig = {}) {
+  delete<T>(endpoint: string, data?: unknown, config: RequestConfig = {}) {
     return this.request<T>(endpoint, {
       ...config,
       method: 'DELETE',
+      body: data ? JSON.stringify(data) : undefined,
     });
   }
 }

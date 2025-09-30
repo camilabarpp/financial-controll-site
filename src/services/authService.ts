@@ -12,7 +12,7 @@ export interface LoginResponse {
 export async function loginService(
   payload: LoginPayload
 ): Promise<LoginResponse> {
-  return http.post<LoginResponse>('/login', payload, { requiresAuth: false });
+  return http.post<LoginResponse>('/auth/signin', payload, { requiresAuth: false });
 }
 
 export function saveToken(token: string) {

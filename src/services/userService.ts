@@ -34,19 +34,19 @@ export interface RegisterPayload {
 }
 
 export async function getMe(): Promise<User> {
-  return http.get<User>('/me');
+  return http.get<User>('/auth/me');
 }
 
-export async function updateUser(data: UpdateUserPayload): Promise<User> {
-  return http.patch<User>('/users/1', data);
+export async function updateUser(userId: string, payload: UpdateUserPayload): Promise<User> {
+  return http.put<User>(`/users/${userId}`, payload);
 }
 
-export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
-  return http.post('/users/change-password', payload);
+export async function changePassword(userId: string, payload: ChangePasswordPayload): Promise<void> {
+  return http.patch(`/users/${userId}/change-password`, payload);
 }
 
-export async function deleteUser(payload: DeleteAccountPayload): Promise<void> {
-  return http.post('/users/delete-account', payload);
+export async function deleteUser(userid: string, payload: DeleteAccountPayload): Promise<void> {
+  return http.delete(`/users/${userid}`, { data: payload });
 }
 
 export async function forgotPassword(payload: ForgotPasswordPayload): Promise<{ message: string }> {
@@ -54,5 +54,5 @@ export async function forgotPassword(payload: ForgotPasswordPayload): Promise<{ 
 }
 
 export async function register(payload: RegisterPayload): Promise<User> {
-  return http.post<User>('/register', payload, { requiresAuth: false });
+  return http.post<User>('/auth/signup', payload, { requiresAuth: false });
 }

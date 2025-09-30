@@ -48,7 +48,7 @@ const ExpensesInsights = () => {
   }
 
   const totalExpenses = expenses.expenseCategory.reduce((sum, item) => sum + item.expenses, 0);
-  const total6Months = expenses.semesterExpense.reduce((sum, item) => sum + item.expenses, 0);
+  const groupedExpenses = expenses.groupedExpenses.reduce((sum, item) => sum + item.expenses, 0);
 
   const calculatePercentage = (value: number) => {
     return ((value / totalExpenses) * 100).toFixed(1);
@@ -158,11 +158,11 @@ const ExpensesInsights = () => {
 
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="text-lg">Gastos nos últimos 6 meses</CardTitle>
+            <CardTitle className="text-lg">Gráfico de gastos durante {period === "WEEK" ? "uma semana" : period === "MONTH" ? "um mês" : period === "QUARTER" ? "um trimestre" : "um ano"}</CardTitle>
             <div className="mt-4 p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-background rounded-xl border border-border/5 shadow-sm flex items-center gap-3">
               <FaWallet className="text-primary text-xl" />
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold tracking-tight">{formatCurrency(total6Months)}</span>
+                <span className="text-2xl font-bold tracking-tight">{formatCurrency(groupedExpenses)}</span>
                 <span className="text-sm text-muted-foreground">BRL</span>
               </div>
             </div>
@@ -170,7 +170,7 @@ const ExpensesInsights = () => {
           <CardContent>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={expenses.semesterExpense}>
+                <BarChart data={expenses.groupedExpenses}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis 

@@ -172,7 +172,7 @@ const Account = () => {
 
     setIsLoading(true);
     try {
-      const updatedUser = await updateUser({
+      const updatedUser = await updateUser(user?.id.toString(), {
         name: formData.name,
         email: formData.email,
         avatar: formData.avatar
@@ -220,7 +220,7 @@ const Account = () => {
     }
 
     try {
-      await changePassword({
+      await changePassword(user?.id.toString(), {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
@@ -270,7 +270,7 @@ const Account = () => {
     }
     setIsLoading(true);
     try {
-      await deleteUser({ password: deletePassword });
+      await deleteUser(user?.id.toString(), { password: deletePassword });
       setDeleteModalOpen(false);
       setDeletePassword("");
       setDeletePasswordError("");
