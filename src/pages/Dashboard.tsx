@@ -73,9 +73,9 @@ const Dashboard = () => {
 
         <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium opacity-90">Saldo Total</CardTitle>
+            <CardTitle className="text-sm font-medium opacity-90">Saldo</CardTitle>
             <div className="text-3xl font-bold">
-              {showBalance ? formatCurrency(balance.total) : '••••••'}
+              {showBalance ? formatCurrency(balance.avaliable) : '••••••'}
             </div>
           </CardHeader>
         </Card>
@@ -100,7 +100,7 @@ const Dashboard = () => {
                 <span className="text-sm font-medium">Saídas</span>
               </div>
               <div className="text-xl font-bold text-foreground mt-1">
-                {showBalance ? formatCurrency(balance.expenses) : '••••••'}
+                {showBalance ? formatCurrency(balance.expense) : '••••••'}
               </div>
             </CardContent>
           </Card>
@@ -111,10 +111,10 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <TrendingUp className="h-5 w-5 text-primary" />
-                <span className="font-medium text-foreground">Saldo Livre</span>
+                <span className="font-medium text-foreground">Economias</span>
               </div>
               <div className="text-lg font-bold text-foreground">
-                {showBalance ? formatCurrency(balance.available) : '••••••'}
+                {showBalance ? formatCurrency(balance.saved) : '••••••'}
               </div>
             </div>
           </CardContent>

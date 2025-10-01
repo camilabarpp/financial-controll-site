@@ -74,7 +74,7 @@ export const Transactions = () => {
   };
 
   const totalIncome = totals?.income || 0;
-  const totalExpenses = totals?.expenses || 0;
+  const totalExpenses = totals?.expense || 0;
 
   const handleSubmit = async (transactionData: {
     description: string;

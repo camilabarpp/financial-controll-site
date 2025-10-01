@@ -1,10 +1,9 @@
 import { http } from '@/utils/httpClient';
 
 export interface Balance {
-  total: number;
+  avaliable: number;
   income: number;
-  expenses: number;
-  available: number;
+  expense: number;
   saved: number;
 }
 
@@ -20,14 +19,14 @@ export interface Transaction {
 
 export interface TransactionTotals {
   income: number
-  expenses: number;
+  expense: number;
   total: number;
 }
 
 export type SortOrder = '' | 'ASC' | 'DESC';
 
 export async function getBalance(): Promise<Balance> {
-  return http.get<Balance>('/balance');
+  return http.get<Balance>('/transactions/balance');
 }
 
 export async function getRecentTransactions(): Promise<Transaction[]> {
