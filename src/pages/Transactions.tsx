@@ -331,25 +331,35 @@ export const Transactions = () => {
                   ))}
                 </div>
                 {/* Pagination */}
-                <div className="flex justify-center items-center gap-3 mt-4">
-                  <Button
-                    size="sm"
-                    variant={transactionsData.currentPage <= 1 ? "outline" : "default"}
-                    className="rounded-full px-4 font-semibold shadow-sm transition-all"
-                    disabled={transactionsData.currentPage <= 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  >
-                   Anterior
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={transactionsData.currentPage >= transactionsData.totalPages ? "outline" : "default"}
-                    className="rounded-full px-4 font-semibold shadow-sm transition-all"
-                    disabled={transactionsData.currentPage >= transactionsData.totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(transactionsData.totalPages, p + 1))}
-                  >
-                    Próxima
-                  </Button>
+                <div className="flex justify-center sm:justify-center items-center gap-3 mt-4
+                  sm:flex-row flex-row
+                  flex
+                  w-full
+                  sm:space-x-3
+                  space-x-0
+                  space-y-0
+                  sm:space-y-0
+                  ">
+                  <div className="flex w-full sm:w-auto justify-between sm:justify-center gap-3">
+                    <Button
+                      size="sm"
+                      variant={transactionsData.currentPage <= 1 ? "outline" : "default"}
+                      className="rounded-full px-4 font-semibold shadow-sm transition-all"
+                      disabled={transactionsData.currentPage <= 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    >
+                      Anterior
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={transactionsData.currentPage >= transactionsData.totalPages ? "outline" : "default"}
+                      className="rounded-full px-4 font-semibold shadow-sm transition-all"
+                      disabled={transactionsData.currentPage >= transactionsData.totalPages}
+                      onClick={() => setCurrentPage((p) => Math.min(transactionsData.totalPages, p + 1))}
+                    >
+                      Próxima
+                    </Button>
+                  </div>
                 </div>
               </>
             ) : (
@@ -376,7 +386,9 @@ export const Transactions = () => {
           description: selectedTransaction.description,
           amount: selectedTransaction.amount,
           type: selectedTransaction.type,
-          date: selectedTransaction.date,
+          date: selectedTransaction.date
+            ? new Date(selectedTransaction.date).toISOString().slice(0, 10)
+            : "",
           category: selectedTransaction.category
         } : undefined}
       />
