@@ -80,7 +80,6 @@ export const Transactions = () => {
     type: "INCOME" | "EXPENSE";
     date: string;
     category: string;
-    categoryColor: string;
   }) => {
     try {
       setIsLoading(true);

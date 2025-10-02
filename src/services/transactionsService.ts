@@ -12,7 +12,7 @@ export interface Transaction {
   description: string;
   amount: number;
   category: string;
-  categoryColor: string;
+  categoryColor?: string;
   date: string;
   type: 'INCOME' | 'EXPENSE';
 }
