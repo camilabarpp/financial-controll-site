@@ -18,9 +18,12 @@ export interface Transaction {
 }
 
 export interface TransactionTotals {
-  income: number
-  expense: number;
+  transactionIncome: number
+  transactionExpense: number;
+  transactions: Transaction[];
   total: number;
+  totalPages: number;
+  currentPage: number;
 }
 
 export type SortOrder = '' | 'ASC' | 'DESC';
@@ -36,14 +39,18 @@ export async function getRecentTransactions(): Promise<Transaction[]> {
 export async function getAllTransactions(
   period: string, 
   search?: string,
-  sort?: SortOrder
-): Promise<Transaction[]> {
+  sort?: SortOrder,
+  transactionType?: 'INCOME' | 'EXPENSE' | 'ALL',
+  currentPage?: number
+): Promise<TransactionTotals> {
   const params = new URLSearchParams();
   if (period) params.append('period', period);
   if (search) params.append('search', search);
   params.append('sort', sort);
+  if (transactionType) params.append('transactionType', transactionType);
+  if (currentPage) params.append('currentPage', currentPage.toString());
 
-  return http.get<Transaction[]>(`/transactions?${params.toString()}`);
+  return http.get<TransactionTotals>(`/transactions?${params.toString()}`);
 }
 
 export async function createTransaction(transaction: Omit<Transaction, 'id'>): Promise<Transaction> {
