@@ -16,7 +16,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-// Ajuste: suporte a objetos com label/value/color e custom handlers
 export interface ComboboxItem {
   label: string
   value: string
@@ -49,10 +48,8 @@ export function Combobox({
   const [open, setOpen] = React.useState(false)
   const [searchTerm, setSearchTerm] = React.useState("")
 
-  // Atualiza o valor do input externo se fornecido
   React.useEffect(() => {
     if (onInputChange) onInputChange(searchTerm)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm])
 
   const handleSelect = (currentValue: string) => {
