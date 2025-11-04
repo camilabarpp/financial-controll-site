@@ -68,3 +68,9 @@ export async function deleteTransaction(id: number): Promise<void> {
 export async function getTransactionTotals(period: string): Promise<TransactionTotals> {
   return http.get<TransactionTotals>(`/transactions/totals?period=${period}`);
 }
+
+export async function getCategories(search?: string): Promise<string[]> {
+  const params = new URLSearchParams();
+  if (search) params.append('search', search);
+  return http.get<string[]>(`/transactions/categories?${params.toString()}`);
+}

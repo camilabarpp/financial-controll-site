@@ -9,7 +9,7 @@ import { formatDate } from "@/utils/format-date";
 import { TransactionModal } from "@/components/TransactionModal";
 import { DeleteTransactionModal } from "@/components/DeleteTransactionModal";
 import { Pencil, Trash2 } from "lucide-react";
-import { createTransaction, deleteTransaction, getAllTransactions, getTransactionTotals, Transaction, TransactionTotals, updateTransaction, SortOrder } from "@/services/transactionsService";
+import { createTransaction, deleteTransaction, getAllTransactions, Transaction, TransactionTotals, updateTransaction, SortOrder, getCategories } from "@/services/transactionsService";
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
 import { useResetScroll } from "@/hooks/useResetScroll";
@@ -30,6 +30,8 @@ export const Transactions = () => {
   const [error, setError] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder | null>('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -40,7 +42,7 @@ export const Transactions = () => {
   }, [searchTerm]);
 
   useEffect(() => {
-    setCurrentPage(1); // Reset page on filter/search/period change
+    setCurrentPage(1); 
   }, [period, debouncedSearchTerm, sortOrder, transactionTypeFilter]);
 
   useEffect(() => {
@@ -84,8 +86,10 @@ export const Transactions = () => {
     try {
       setIsLoading(true);
       if (isEditingTransaction && selectedTransaction) {
+        transactionData.category = transactionData.category.toUpperCase();
         await updateTransaction(selectedTransaction.id, transactionData);
       } else {
+        transactionData.category = transactionData.category.toUpperCase();
         await createTransaction(transactionData);
       }
       await loadData();
@@ -120,6 +124,42 @@ export const Transactions = () => {
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsEditingTransaction(true);
+  };
+
+  const handleCategoryInputChange = (input: string) => {
+    if (
+      (isModalOpen || isEditingTransaction) &&
+      input &&
+      !categories.includes(input)
+    ) {
+      setCategoryFilter(input);
+    }
+  };
+
+  useEffect(() => {
+    if (isModalOpen || isEditingTransaction) {
+      loadCategories();
+    }
+  }, [isModalOpen, isEditingTransaction]);
+
+  useEffect(() => {
+    if (
+      (isModalOpen || isEditingTransaction) &&
+      categoryFilter &&
+      !categories.includes(categoryFilter)
+    ) {
+      loadCategories();
+    }
+  }, [categoryFilter]);
+
+  const loadCategories = async () => {
+    try {
+      const cats = await getCategories(categoryFilter);
+      setCategories(cats as string[]);
+    } catch (e) {
+      console.error("Erro ao carregar categorias:", e);
+      setError("Erro ao carregar categorias");
+    }
   };
 
   if (isLoading) {
@@ -379,7 +419,8 @@ export const Transactions = () => {
           setIsEditingTransaction(false);
           setSelectedTransaction(null);
         }}
-        categories={Array.from(new Set(transactionsData?.transactions.map(t => t.category)))}
+        categories={categories}
+        onCategoryInputChange={handleCategoryInputChange}
         onSubmit={handleSubmit}
         mode={isEditingTransaction ? 'edit' : 'create'}
         initialData={selectedTransaction ? {

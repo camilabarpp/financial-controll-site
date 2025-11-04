@@ -27,16 +27,18 @@ interface TransactionModalProps {
     category: string;
   };
   mode?: 'create' | 'edit';
-  categories?: string[];
+  categories: string[]; 
+  onCategoryInputChange: (input: string) => void;
 }
 
-export function TransactionModal({ 
-  open, 
-  onClose, 
-  onSubmit, 
-  initialData, 
+export function TransactionModal({
+  open,
+  onClose,
+  onSubmit,
+  initialData,
   mode = 'create',
-  categories = [] 
+  categories,
+  onCategoryInputChange,
 }: TransactionModalProps) {
   const emptyFormData = {
     description: "",
@@ -57,7 +59,7 @@ export function TransactionModal({
         }).format(initialData.amount),
         value: initialData.amount,
         type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
-        date: initialData.date.split('-').reverse().join('/'),
+        date: initialData.date,
         category: initialData.category
       };
     }
@@ -65,20 +67,49 @@ export function TransactionModal({
   });
 
   const [dateError, setDateError] = useState("");
-  const [newCategory, setNewCategory] = useState("");
+  const [categoryColor, setCategoryColor] = useState("#8A05BE");
+  const [categoryError, setCategoryError] = useState<string | null>(null);
   const { toast } = useToast();
   const { validateDate } = useDateValidation();
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        description: initialData.description,
+        valueFormatted: new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(initialData.amount),
+        value: initialData.amount,
+        type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
+        date: initialData.date,
+        category: initialData.category
+      });
+    } else {
+      setFormData(emptyFormData);
+      setCategoryColor("#8A05BE");
+    }
+  }, [initialData, categories]);
+
+  const handleCategoryChange = (value: string, _color?: string, _isNew?: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      category: value
+    }));
+    onCategoryInputChange(value);
+    setCategoryError(null);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     let submissionDate = formData.date;
-    
+
     if (!formData.date.includes('/')) {
       submissionDate = formData.date;
     } else {
       const dateValidation = validateDate(formData.date, true, false);
-      
+
       if (!dateValidation.isValid) {
         toast({
           title: "Data inválida",
@@ -99,8 +130,7 @@ export function TransactionModal({
       return;
     }
 
-    const finalCategory = formData.category || newCategory;
-    if (!finalCategory) {
+    if (!formData.category) {
       toast({
         title: "Categoria obrigatória",
         description: "Por favor, selecione ou digite uma categoria",
@@ -114,7 +144,7 @@ export function TransactionModal({
       amount: formData.value,
       type: formData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
       date: submissionDate,
-      category: finalCategory
+      category: formData.category
     });
   };
 
@@ -122,7 +152,7 @@ export function TransactionModal({
     if (mode === 'create') {
       setFormData(emptyFormData);
       setDateError("");
-      setNewCategory("");
+      setCategoryError(null);
     }
 
     if (mode === 'edit' && initialData) {
@@ -134,33 +164,14 @@ export function TransactionModal({
         }).format(initialData.amount),
         value: initialData.amount,
         type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
-        date: initialData.date.split('-').reverse().join('/'),
+        date: initialData.date,
         category: initialData.category
       });
+      setCategoryError(null);
     }
 
     onClose();
   };
-
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        description: initialData.description,
-        valueFormatted: new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        }).format(initialData.amount),
-        value: initialData.amount,
-        type: initialData.type,
-        date: initialData.date.split('-').reverse().join('/'),
-        category: initialData.category
-      });
-    } else {
-      setFormData(emptyFormData);
-    }
-  }, [initialData]);
-
-  const allCategories = [...new Set([...categories, newCategory].filter(Boolean))];
 
   return (
     <Drawer open={open} onOpenChange={handleClose}>
@@ -237,21 +248,20 @@ export function TransactionModal({
           <div>
             <label className="block text-sm font-medium mb-1">Categoria</label>
             <Combobox
-              items={allCategories}
+              items={categories.map(cat => ({
+                label: cat,
+                value: cat,
+              }))}
               value={formData.category}
               placeholder="Selecione ou digite uma categoria"
-              onChange={(value) => {
-                setFormData(prev => ({ ...prev, category: value }));
-                if (!categories.includes(value)) {
-                  setNewCategory(value);
-                }
-              }}
-              createItem={(value) => {
-                setNewCategory(value);
-                return value;
-              }}
+              onInputChange={onCategoryInputChange}
+              onChange={handleCategoryChange}
+              allowCustom
+              color={categoryColor}
+              onColorChange={setCategoryColor}
               className="w-full"
             />
+            {categoryError && <span className="text-xs text-red-500">{categoryError}</span>}
           </div>
 
           <div>
@@ -276,7 +286,7 @@ export function TransactionModal({
             <Button 
               type="submit" 
               className="w-full"
-              disabled={!formData.description || !formData.value || !formData.date || dateError !== "" || (!formData.category && !newCategory)}
+              disabled={!formData.description || !formData.value || !formData.date || dateError !== "" || !formData.category}
             >
               {mode === 'create' ? 'Adicionar' : 'Salvar alterações'}
             </Button>
