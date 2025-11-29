@@ -6,13 +6,13 @@ export interface ExpenseCategory {
   color: string;
 }
 
-export interface GroupedExpenses {
+export interface LastSixMonthsExpenses {
   month: string;
   expenses: number;
 }
 
 export interface ExpensesInsightsData {
-  groupedExpenses: GroupedExpenses[];
+  lastSixMonthsExpenses: LastSixMonthsExpenses[];
   expenseCategory: ExpenseCategory[];
   totalExpenses: number;
   categoriesCount: number;
