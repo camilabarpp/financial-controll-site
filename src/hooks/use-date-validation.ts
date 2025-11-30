@@ -4,6 +4,34 @@ interface DateValidationResult {
   formattedDate?: string;
 }
 
+export function formatToDDMMYYYY(input?: string): string {
+	if (!input) return "";
+	if (/^\d{2}\/\d{2}\/\d{4}$/.test(input)) return input;
+
+	const datePart = input.split('T')[0];
+	if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+		const [y, m, d] = datePart.split('-');
+		return `${d}/${m}/${y}`;
+	}
+
+	const dObj = new Date(input);
+	if (!isNaN(dObj.getTime())) {
+		try {
+			return dObj.toLocaleDateString("pt-BR");
+		} catch (error) {
+			console.error("Erro ao formatar a data com toLocaleDateString");
+		}
+	}
+
+	const match = input.match(/(\d{4})-(\d{2})-(\d{2})/);
+	if (match) {
+		const [, y, m, d] = match;
+		return `${d}/${m}/${y}`;
+	}
+
+	return "";
+}
+
 export const useDateValidation = () => {
   const validateDate = (dateString: string, isOptional: boolean = false, requireFutureDate: boolean = false): DateValidationResult => {
     if (isOptional && (!dateString || dateString.trim() === '')) {
@@ -84,6 +112,7 @@ export const useDateValidation = () => {
 
   return {
     validateDate,
-    formatDateToISO
+    formatDateToISO,
+    formatToDDMMYYYY
   };
 };

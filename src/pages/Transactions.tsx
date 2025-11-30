@@ -427,9 +427,7 @@ export const Transactions = () => {
           description: selectedTransaction.description,
           amount: selectedTransaction.amount,
           type: selectedTransaction.type,
-          date: selectedTransaction.date
-            ? new Date(selectedTransaction.date).toISOString().slice(0, 10)
-            : "",
+          date: selectedTransaction.date ? formatDate(selectedTransaction.date) : "",
           category: selectedTransaction.category
         } : undefined}
       />

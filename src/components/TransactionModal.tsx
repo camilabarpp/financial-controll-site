@@ -8,6 +8,7 @@ import InputMask from "react-input-mask";
 import { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 import { Combobox } from "./ui/combobox";
+import { formatToDDMMYYYY } from "@/hooks/use-date-validation";
 
 interface TransactionModalProps {
   open: boolean;
@@ -59,7 +60,8 @@ export function TransactionModal({
         }).format(initialData.amount),
         value: initialData.amount,
         type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
-        date: initialData.date,
+        // formatar para DD/MM/YYYY
+        date: formatToDDMMYYYY(initialData.date),
         category: initialData.category
       };
     }
@@ -82,14 +84,16 @@ export function TransactionModal({
         }).format(initialData.amount),
         value: initialData.amount,
         type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
-        date: initialData.date,
+        // formatar para DD/MM/YYYY
+        date: formatToDDMMYYYY(initialData.date),
         category: initialData.category
       });
     } else {
       setFormData(emptyFormData);
       setCategoryColor("#8A05BE");
     }
-  }, [initialData, categories]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData]);
 
   const handleCategoryChange = (value: string, _color?: string, _isNew?: boolean) => {
     setFormData(prev => ({
@@ -164,7 +168,8 @@ export function TransactionModal({
         }).format(initialData.amount),
         value: initialData.amount,
         type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
-        date: initialData.date,
+        // formatar para DD/MM/YYYY
+        date: formatToDDMMYYYY(initialData.date),
         category: initialData.category
       });
       setCategoryError(null);
