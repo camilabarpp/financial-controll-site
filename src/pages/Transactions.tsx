@@ -140,6 +140,10 @@ export const Transactions = () => {
     if (isModalOpen || isEditingTransaction) {
       loadCategories();
     }
+
+    if (!isModalOpen && !isEditingTransaction) {
+      setCategoryFilter(null);
+    }
   }, [isModalOpen, isEditingTransaction]);
 
   useEffect(() => {
@@ -178,7 +182,7 @@ export const Transactions = () => {
             <h1 className="text-2xl font-bold text-foreground">Transações</h1>
             <p className="text-muted-foreground">Histórico completo</p>
           </div>
-          <Button size="icon" className="rounded-full" onClick={() => setIsModalOpen(true)}>
+          <Button size="icon" className="rounded-full" onClick={() => { setIsModalOpen(true); setSelectedTransaction(null); setIsEditingTransaction(false); }}>
             <Plus className="h-5 w-5" />
           </Button>
         </div>

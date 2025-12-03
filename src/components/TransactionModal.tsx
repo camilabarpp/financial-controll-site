@@ -60,7 +60,6 @@ export function TransactionModal({
         }).format(initialData.amount),
         value: initialData.amount,
         type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
-        // formatar para DD/MM/YYYY
         date: formatToDDMMYYYY(initialData.date),
         category: initialData.category
       };
@@ -84,7 +83,6 @@ export function TransactionModal({
         }).format(initialData.amount),
         value: initialData.amount,
         type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
-        // formatar para DD/MM/YYYY
         date: formatToDDMMYYYY(initialData.date),
         category: initialData.category
       });
@@ -92,7 +90,6 @@ export function TransactionModal({
       setFormData(emptyFormData);
       setCategoryColor("#8A05BE");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData]);
 
   const handleCategoryChange = (value: string, _color?: string, _isNew?: boolean) => {
