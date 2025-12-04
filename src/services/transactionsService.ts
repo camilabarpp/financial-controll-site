@@ -26,6 +26,11 @@ export interface TransactionTotals {
   currentPage: number;
 }
 
+export interface TransactionCategory {
+  category: string;
+  categoryColor?: string;
+}
+
 export type SortOrder = '' | 'ASC' | 'DESC';
 
 export async function getBalance(): Promise<Balance> {
@@ -69,8 +74,8 @@ export async function getTransactionTotals(period: string): Promise<TransactionT
   return http.get<TransactionTotals>(`/transactions/totals?period=${period}`);
 }
 
-export async function getCategories(search?: string): Promise<string[]> {
+export async function getCategories(search?: string): Promise<TransactionCategory[]> {
   const params = new URLSearchParams();
   if (search) params.append('search', search);
-  return http.get<string[]>(`/transactions/categories?${params.toString()}`);
+  return http.get<TransactionCategory[]>(`/transactions/categories?${params.toString()}`);
 }

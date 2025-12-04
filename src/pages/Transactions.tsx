@@ -9,7 +9,7 @@ import { formatDate } from "@/utils/format-date";
 import { TransactionModal } from "@/components/TransactionModal";
 import { DeleteTransactionModal } from "@/components/DeleteTransactionModal";
 import { Pencil, Trash2 } from "lucide-react";
-import { createTransaction, deleteTransaction, getAllTransactions, Transaction, TransactionTotals, updateTransaction, SortOrder, getCategories } from "@/services/transactionsService";
+import { createTransaction, deleteTransaction, getAllTransactions, Transaction, TransactionTotals, updateTransaction, SortOrder, getCategories, TransactionCategory } from "@/services/transactionsService";
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
 import { useResetScroll } from "@/hooks/useResetScroll";
@@ -31,7 +31,7 @@ export const Transactions = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder | null>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<TransactionCategory[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -76,33 +76,81 @@ export const Transactions = () => {
   const totalIncome = transactionsData?.transactionIncome || 0;
   const totalExpenses = transactionsData?.transactionExpense || 0;
 
-  const handleSubmit = async (transactionData: {
-    description: string;
-    amount: number;
-    type: "INCOME" | "EXPENSE";
-    date: string;
-    category: string;
-  }) => {
-    try {
-      setIsLoading(true);
-      if (isEditingTransaction && selectedTransaction) {
-        transactionData.category = transactionData.category.toUpperCase();
-        await updateTransaction(selectedTransaction.id, transactionData);
-      } else {
-        transactionData.category = transactionData.category.toUpperCase();
-        await createTransaction(transactionData);
-      }
-      await loadData();
-      setIsModalOpen(false);
-      setIsEditingTransaction(false);
-      setSelectedTransaction(null);
-    } catch (error) {
-      console.error('Error saving transaction:', error);
-      setError('Erro ao salvar transação');
-    } finally {
-      setIsLoading(false);
+const handleSubmit = async (transactionData: {
+  description: string;
+  amount: number;
+  type: "INCOME" | "EXPENSE";
+  date: string;
+  category: string;
+  categoryColor?: string;
+}) => {
+  try {
+    setIsLoading(true);
+
+    const categoryUpper = transactionData.category.toUpperCase();
+    const categoryColor = await generateCategoryColor(categoryUpper) || "#8A05BE";
+
+    const payload = {
+      ...transactionData,
+      category: categoryUpper,
+      categoryColor: categoryColor
+    };
+
+    if (isEditingTransaction && selectedTransaction) {
+      await updateTransaction(selectedTransaction.id, payload);
+    } else {
+      await createTransaction(payload);
     }
+
+    await loadData();
+    setIsModalOpen(false);
+    setIsEditingTransaction(false);
+    setSelectedTransaction(null);
+  } catch (error) {
+    console.error('Error saving transaction:', error);
+    setError('Erro ao salvar transação');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  const generateCategoryColor = async (category: string) => {
+   const local = findCategoryColorSelected(category);
+  if (local) return local;
+
+  try {
+    const cats = await getCategories(category); 
+    if (cats && cats.length > 0) {
+      setCategories(prev => {
+        const merged = [...prev];
+        cats.forEach((c: TransactionCategory) => {
+          if (!merged.some(m => m.category === c.category)) merged.push(c);
+        });
+        return merged;
+      });
+      return cats[0].categoryColor;
+    }
+  } catch (e) {
+    console.error("Erro ao buscar categoria para cor:", e);
+  }
+
+  return randomColor();
+};
+
+  const randomColor = () => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
   };
+
+  const findCategoryColorSelected = (category: string) => {
+  const upper = category.toUpperCase();
+  const match = categories.find(cat => cat.category.toUpperCase() === upper);
+  return match ? match.categoryColor : null;
+};
 
   const handleDelete = async () => {
     try {
@@ -130,7 +178,7 @@ export const Transactions = () => {
     if (
       (isModalOpen || isEditingTransaction) &&
       input &&
-      !categories.includes(input)
+      !categories.some(category => category.category === input)
     ) {
       setCategoryFilter(input);
     }
@@ -150,7 +198,7 @@ export const Transactions = () => {
     if (
       (isModalOpen || isEditingTransaction) &&
       categoryFilter &&
-      !categories.includes(categoryFilter)
+      !categories.map(cat => cat.category).includes(categoryFilter)
     ) {
       loadCategories();
     }
@@ -159,7 +207,7 @@ export const Transactions = () => {
   const loadCategories = async () => {
     try {
       const cats = await getCategories(categoryFilter);
-      setCategories(cats as string[]);
+      setCategories(cats as TransactionCategory[]);
     } catch (e) {
       console.error("Erro ao carregar categorias:", e);
       setError("Erro ao carregar categorias");
@@ -423,7 +471,7 @@ export const Transactions = () => {
           setIsEditingTransaction(false);
           setSelectedTransaction(null);
         }}
-        categories={categories}
+        categories={categories.map(cat => cat.category)}
         onCategoryInputChange={handleCategoryInputChange}
         onSubmit={handleSubmit}
         mode={isEditingTransaction ? 'edit' : 'create'}
