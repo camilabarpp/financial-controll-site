@@ -13,6 +13,7 @@ import { createTransaction, deleteTransaction, getAllTransactions, Transaction, 
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
 import { useResetScroll } from "@/hooks/useResetScroll";
+import { EmptyDataPage } from "@/components/EmptyDataPage";
 
 export const Transactions = () => {
   useResetScroll();
@@ -455,10 +456,9 @@ const handleSubmit = async (transactionData: {
                 </div>
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                <span className="text-4xl mb-2">🗒️</span>
-                <span className="text-sm">Nenhuma transação encontrada.</span>
-              </div>
+              <EmptyDataPage 
+                description="Nenhuma transação recente para mostrar."
+              />
             )}
           </CardContent>
         </Card>

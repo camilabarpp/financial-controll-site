@@ -8,6 +8,7 @@ import { getExpensesInsights, ExpensesInsightsData } from "@/services/expensesIn
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
 import { useResetScroll } from "@/hooks/useResetScroll";
+import { EmptyDataPage } from "@/components/EmptyDataPage";
 
 const ExpensesInsights = () => {
   useResetScroll();
@@ -48,7 +49,6 @@ const ExpensesInsights = () => {
   }
 
   const totalExpenses = expenses.expenseCategory.reduce((sum, item) => sum + item.expenses, 0);
-  const groupedExpenses = expenses.lastSixMonthsExpenses.reduce((sum, item) => sum + item.expenses, 0);
 
   const calculatePercentage = (value: number) => {
     return ((value / totalExpenses) * 100).toFixed(1);
@@ -138,7 +138,8 @@ const ExpensesInsights = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            {expenses.expenseCategory.map((category, index) => (
+            {expenses.expenseCategory.length > 0 ? (
+              expenses.expenseCategory.map((category, index) => (
               <div key={index} className="flex items-center justify-between px-2 py-2 rounded-lg hover:bg-primary/5 transition">
                 <div className="flex items-center space-x-3">
                   <div 
@@ -152,7 +153,10 @@ const ExpensesInsights = () => {
                   <p className="font-bold text-foreground">{formatCurrency(category.expenses)}</p>
                 </div>
               </div>
-            ))}
+            ))
+            ) : (
+              <EmptyDataPage description="Nenhum gasto registrado para o período selecionado." />
+            )}
           </CardContent>
         </Card>
 
@@ -161,7 +165,8 @@ const ExpensesInsights = () => {
             <CardTitle className="text-lg">Gráfico de gastos durante o semestre</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 w-full">
+            { expenses.lastSixMonthsExpenses.length > 0 ? (
+              <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={expenses.lastSixMonthsExpenses}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -180,7 +185,9 @@ const ExpensesInsights = () => {
                   />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            </div>) : (
+              <EmptyDataPage description="Nenhum gasto registrado para o semestre." />
+            )}
           </CardContent>
         </Card>
       </div>

@@ -11,6 +11,7 @@ import { Balance, getBalance, getRecentTransactions, Transaction } from "@/servi
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
 import { useResetScroll } from "@/hooks/useResetScroll";
+import { EmptyDataPage } from "@/components/EmptyDataPage";
 
 const Dashboard = () => {
   useResetScroll();
@@ -125,47 +126,55 @@ const Dashboard = () => {
             <CardTitle className="text-lg">Transações Recentes</CardTitle>
           </CardHeader>
           <CardContent>
-            {recentTransactions.map((transaction) => (
-              <div key={transaction.id} className="group flex items-center justify-between pb-3 rounded-lg hover:bg-muted/50 transition-colors relative">
-                <div className="flex items-center space-x-3 flex-1 min-w-0">
-                  <div className="flex-shrink-0">
-                    {transaction.type === 'INCOME' ? 
-                      <ArrowUpRight className="h-4 w-4 text-positive" /> : 
-                      <ArrowDownRight className="h-4 w-4 text-negative" />
-                    }
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1 min-w-0">
-                        <p className="font-medium text-foreground truncate pr-4">
-                          {transaction.description}
-                        </p>
-                        <Badge 
-                          className="text-xs px-2 py-0.5 truncate max-w-[100px]"
-                          variant="secondary"
-                          style={{ 
-                            backgroundColor: transaction.categoryColor,
-                            color: '#FFFFFF'
-                          }}
-                        >
-                          {transaction.category}
-                        </Badge>
-                      </div>
-                      <div className="text-right flex-shrink-0 ml-4">
-                        <span className="text-xs text-muted-foreground block mb-1">
-                          {formatDate(transaction.date)}
-                        </span>
-                        <div className={`font-bold whitespace-nowrap truncate max-w-[120px] ${
-                          transaction.type === 'INCOME' ? 'text-positive' : 'text-negative'
-                        }`}>
-                          {formatCurrency(transaction.amount)}
+          <CardContent>
+            {recentTransactions && recentTransactions.length > 0 ? (
+              recentTransactions.map((transaction) => (
+                <div key={transaction.id} className="group flex items-center justify-between pb-3 rounded-lg hover:bg-muted/50 transition-colors relative">
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <div className="flex-shrink-0">
+                      {transaction.type === 'INCOME' ? 
+                        <ArrowUpRight className="h-4 w-4 text-positive" /> : 
+                        <ArrowDownRight className="h-4 w-4 text-negative" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1 min-w-0">
+                          <p className="font-medium text-foreground truncate pr-4">
+                            {transaction.description}
+                          </p>
+                          <Badge 
+                            className="text-xs px-2 py-0.5 truncate max-w-[100px]"
+                            variant="secondary"
+                            style={{ 
+                              backgroundColor: transaction.categoryColor,
+                              color: '#FFFFFF'
+                            }}
+                          >
+                            {transaction.category}
+                          </Badge>
+                        </div>
+                        <div className="text-right flex-shrink-0 ml-4">
+                          <span className="text-xs text-muted-foreground block mb-1">
+                            {formatDate(transaction.date)}
+                          </span>
+                          <div className={`font-bold whitespace-nowrap truncate max-w-[120px] ${
+                            transaction.type === 'INCOME' ? 'text-positive' : 'text-negative'
+                          }`}>
+                            {formatCurrency(transaction.amount)}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <EmptyDataPage 
+                description="Nenhuma transação recente para mostrar."
+              />
+            )}
+          </CardContent>
           </CardContent>
           <div className="p-4 border-t">
             <Link to="/transactions">
