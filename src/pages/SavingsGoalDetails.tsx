@@ -47,10 +47,10 @@ const SavingsGoalDetails = () => {
       setError(null);
       setIsLoading(true);
       if (!id) return;
-      const data = await getSavingGoalTransactions(Number(id));
+      const data = await getSavingGoalTransactions((id));
       setSavingsData(data);
 
-      const savingSemesterTransactionsData = await getSavingGoalSemesterTransactions(Number(id));
+      const savingSemesterTransactionsData = await getSavingGoalSemesterTransactions(id);
       setSavingSemesterTransactions(savingSemesterTransactionsData);
     } catch (error) {
       console.error('Error loading savings goal details:', error);
@@ -60,23 +60,46 @@ const SavingsGoalDetails = () => {
     }
   };
   
-  const transactionsChartData = useMemo(() => {
+   const transactionsChartData = useMemo(() => {
     if (!savingSemesterTransactions.length) return [];
-
+   
+    const monthMapping: Record<string, string> = {
+      "JAN": "Janeiro",
+      "FEB": "Fevereiro",
+      "MAR": "Março",
+      "APR": "Abril",
+      "MAY": "Maio",
+      "JUN": "Junho",
+      "JUL": "Julho",
+      "AUG": "Agosto",
+      "SEP": "Setembro",
+      "OCT": "Outubro",
+      "NOV": "Novembro",
+      "DEC": "Dezembro"
+    };
+  
     const monthNames = [
       "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
       "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
     ];
-
+  
     const last6Months = Array.from({ length: 6 }, (_, i) => {
       const date = new Date();
       date.setMonth(date.getMonth() - (5 - i));
       return monthNames[date.getMonth()];
     });
-
+  
     return last6Months.map(month => {
-      const monthData = savingSemesterTransactions.find(t => t.month === month);
-
+      const monthCode = Object.entries(monthMapping).find(
+        ([_, name]) => name === month
+      )?.[0];
+  
+      const monthData = monthCode 
+        ? savingSemesterTransactions.find(t => t.month === monthCode)
+        : null;
+  
+      console.log("Month:", month, "Code:", monthCode, "Data:", monthData);
+  
       return {
         name: month,
         entradas: monthData ? monthData.incomeValue : 0,
@@ -139,16 +162,16 @@ const SavingsGoalDetails = () => {
     type: "INCOME" | "EXPENSE";
     date: string;
   }) => {
-    console.log("Atualizando transação:", { id: selectedTransaction?.id, ...updatedTransaction });
+    console.log("Atualizando transação:", { id, ...updatedTransaction });
     setIsEditingTransaction(false);
     setSelectedTransaction(null);
   };
 
-  const handleDeleteTransaction = async (transactionId: number) => {
+  const handleDeleteTransaction = async (transactionId: string) => {
     try {
       if (!savingsData?.id) return;
       await deleteSavingGoalTransaction(savingsData.id, transactionId);
-      await loadData(); // Recarrega os dados após deletar
+      await loadData(); 
       setTransactionToDelete(null);
     } catch (error) {
       console.error("Erro ao deletar transação:", error);

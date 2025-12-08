@@ -36,7 +36,7 @@ const Savings = () => {
         getAllSavingsGoals(),
         getSavingsGoalTotals()
       ]);
-      setSavingsGoals(goalsData);
+      setSavingsGoals(goalsData.savings);// todo paginar a tela de savings
       setTotals(totalsData);
     } catch (error) {
       console.error('Error loading savings data:', error);
