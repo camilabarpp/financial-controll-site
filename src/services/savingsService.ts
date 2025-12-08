@@ -1,7 +1,7 @@
 import { http } from '@/utils/httpClient';
 
 export interface SavingsGoal {
-  id: number;
+  id: string;
   name: string;
   savingTargetValue?: number;
   current: number;
@@ -16,7 +16,7 @@ export interface SavingsGoalTotals {
 }
 
 export interface SavingGoalDetail {
-    id: number;
+    id: string;
     name: string;
     savingTargetValue?: number;
     current: number;
@@ -26,7 +26,7 @@ export interface SavingGoalDetail {
 }
 
 export interface SavingGoalTransactions {
-    id: number;
+    id: string;
     type: 'INCOME' | 'EXPENSE';
     value: number;
     date: string;
@@ -34,7 +34,6 @@ export interface SavingGoalTransactions {
 }
 
 export interface SavingGoalSemesterTransactions {
-    savingId: number;
     month: string;
     incomeValue: number;
     expenseValue: number;
@@ -48,7 +47,7 @@ export async function getSavingsGoalTotals(): Promise<SavingsGoalTotals> {
   return http.get<SavingsGoalTotals>('/savings/totals');
 }
 
-export async function getSavingsGoalById(id: number): Promise<SavingsGoal> {
+export async function getSavingsGoalById(id: string): Promise<SavingsGoal> {
   return http.get<SavingsGoal>(`/savings/${id}`);
 }
 
@@ -56,22 +55,22 @@ export async function createSavingsGoal(goal: Omit<SavingsGoal, 'id' | 'current'
   return http.post<SavingsGoal>('/savings', goal);
 }
 
-export async function updateSavingsGoal(id: number, goal: Partial<SavingsGoal>): Promise<SavingsGoal> {
+export async function updateSavingsGoal(id: string, goal: Partial<SavingsGoal>): Promise<SavingsGoal> {
   return http.put<SavingsGoal>(`/savings/${id}`, goal);
 }
 
-export async function deleteSavingsGoal(id: number): Promise<void> {
+export async function deleteSavingsGoal(id: string): Promise<void> {
   return http.delete(`/savings/${id}`);
 }
 
-export async function deleteSavingGoalTransaction(savingId: number, transactionId: number): Promise<void> {
+export async function deleteSavingGoalTransaction(savingId: string, transactionId: string): Promise<void> {
   return http.delete(`/savings/${savingId}/transactions/${transactionId}`);
 }
 
-export async function getSavingGoalTransactions(savingId: number): Promise<SavingGoalDetail> {
+export async function getSavingGoalTransactions(savingId: string): Promise<SavingGoalDetail> {
   return http.get<SavingGoalDetail>(`/savings/${savingId}/detail`);
 }
 
-export async function getSavingGoalSemesterTransactions(savingId: number): Promise<SavingGoalSemesterTransactions[]> {
+export async function getSavingGoalSemesterTransactions(savingId: string): Promise<SavingGoalSemesterTransactions[]> {
   return http.get<SavingGoalSemesterTransactions[]>(`/savings/${savingId}/semester-transactions`);
 }
