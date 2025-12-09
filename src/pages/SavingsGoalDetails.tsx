@@ -18,10 +18,11 @@ import { formatCurrency } from "@/utils/format-currency";
 import { formatDate } from "@/utils/format-date";
 import { calculateExpectedCompletion } from "@/utils/calculate-expected-saving_goal_completion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { deleteSavingsGoal, deleteSavingGoalTransaction, getSavingGoalSemesterTransactions, getSavingGoalTransactions, SavingGoalDetail, SavingGoalSemesterTransactions, SavingGoalTransactions, updateSavingsGoal } from "@/services/savingsService";
+import { deleteSavingsGoal, deleteSavingGoalTransaction, getSavingGoalSemesterTransactions, getSavingGoalTransactions, SavingGoalDetail, SavingGoalSemesterTransactions, SavingGoalTransactions, updateSavingsGoal, addSavingGoalTransaction } from "@/services/savingsService";
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
 import { useResetScroll } from "@/hooks/useResetScroll";
+import { add } from "date-fns";
 
 const SavingsGoalDetails = () => {
   useResetScroll();
@@ -97,9 +98,7 @@ const SavingsGoalDetails = () => {
       const monthData = monthCode 
         ? savingSemesterTransactions.find(t => t.month === monthCode)
         : null;
-  
-      console.log("Month:", month, "Code:", monthCode, "Data:", monthData);
-  
+   
       return {
         name: month,
         entradas: monthData ? monthData.incomeValue : 0,
@@ -126,7 +125,6 @@ const SavingsGoalDetails = () => {
   }) => {
 
     try {
-      console.log("Atualizando meta:", { id: savingsData?.id, ...updatedGoalData });
       await updateSavingsGoal(savingsData?.id, updatedGoalData);
       loadData();
     } catch (error) {
@@ -141,14 +139,22 @@ const SavingsGoalDetails = () => {
     setIsEditingGoal(true);
   };
 
-  const handleAddTransaction = (transaction: {
+  const handleAddTransaction = async (transaction: {
     description: string;
     value: number;
     type: "INCOME" | "EXPENSE";
     date: string;
   }) => {
-    console.log("Nova transação:", transaction);
-    setIsAddingTransaction(false);
+    try {
+      console.log("Adicionando transação:", { id, ...transaction });
+      await addSavingGoalTransaction(id!, transaction);
+      loadData();
+    } catch (error) {
+      console.error("Erro ao adicionar transação:", error);
+      setError("Erro ao adicionar transação");
+    } finally {
+      setIsAddingTransaction(false);
+    }
   };
 
   const handleEditTransaction = (transaction: SavingGoalTransactions) => {

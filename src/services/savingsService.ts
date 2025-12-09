@@ -9,6 +9,12 @@ export interface SavingsGoal {
   savingDueDate?: string;
 }
 
+export interface UpdateSavingsGoal {
+  name: string;
+  savingTargetValue?: number;
+  savingDueDate?: string;
+}
+
 export interface SavingsGoalTotals {
   totalSaved: number;
   monthlyIncome: number;
@@ -51,20 +57,16 @@ export async function getSavingsGoalById(id: string): Promise<SavingsGoal> {
   return http.get<SavingsGoal>(`/savings/${id}`);
 }
 
-export async function createSavingsGoal(goal: Omit<SavingsGoal, 'id' | 'current'>): Promise<SavingsGoal> {
+export async function createSavingsGoal(goal: Omit<UpdateSavingsGoal, 'id' | 'current'>): Promise<SavingsGoal> {
   return http.post<SavingsGoal>('/savings', goal);
 }
 
-export async function updateSavingsGoal(id: string, goal: Partial<SavingsGoal>): Promise<SavingsGoal> {
+export async function updateSavingsGoal(id: string, goal: Partial<UpdateSavingsGoal>): Promise<SavingsGoal> {
   return http.put<SavingsGoal>(`/savings/${id}`, goal);
 }
 
 export async function deleteSavingsGoal(id: string): Promise<void> {
   return http.delete(`/savings/${id}`);
-}
-
-export async function deleteSavingGoalTransaction(savingId: string, transactionId: string): Promise<void> {
-  return http.delete(`/savings/${savingId}/transactions/${transactionId}`);
 }
 
 export async function getSavingGoalTransactions(savingId: string): Promise<SavingGoalDetail> {
@@ -73,4 +75,17 @@ export async function getSavingGoalTransactions(savingId: string): Promise<Savin
 
 export async function getSavingGoalSemesterTransactions(savingId: string): Promise<SavingGoalSemesterTransactions[]> {
   return http.get<SavingGoalSemesterTransactions[]>(`/savings/${savingId}/semester-transactions`);
+}
+
+export async function addSavingGoalTransaction(savingId: string, transaction: {
+  description: string;
+  value: number;
+  type: "INCOME" | "EXPENSE";
+  date: string;
+}): Promise<SavingGoalTransactions> {
+  return http.post<SavingGoalTransactions>(`/savings/${savingId}/transactions`, transaction);
+}
+
+export async function deleteSavingGoalTransaction(savingId: string, transactionId: string): Promise<void> {
+  return http.delete(`/savings/${savingId}/transactions/${transactionId}`);
 }

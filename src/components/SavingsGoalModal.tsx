@@ -5,6 +5,7 @@ import { useDateValidation } from "@/hooks/use-date-validation";
 import { useInputMask } from "@/hooks/use-input-mask";
 import InputMask from "react-input-mask";
 import { useState, useEffect } from "react";
+import { formatDate } from "@/utils/format-date";
 
 interface SavingsGoalModalProps {
   open: boolean;
@@ -41,9 +42,7 @@ export function SavingsGoalModal({
 
   useEffect(() => {
     if (initialData) {
-      const formattedDate = initialData.savingDueDate 
-        ? initialData.savingDueDate.split('-').reverse().join('/') 
-        : '';
+      const formattedDate = formatDate(initialData.savingDueDate);
 
       setFormData({
         name: initialData.name,

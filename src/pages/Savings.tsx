@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Target, TrendingUp, Plus, Wallet, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { Target, TrendingUp, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SavingsGoalModal } from "@/components/SavingsGoalModal";
@@ -108,7 +108,7 @@ const Savings = () => {
                   Total Acumulado
                 </span>
                 <span className="text-3xl font-bold text-primary-foreground">
-                  {formatCurrency(totals.monthlyIncome || 0)}
+                  {formatCurrency(totals.totalSaved || 0)}
                 </span>
               </div>
               <div className="flex justify-between mt-4 gap-4">
