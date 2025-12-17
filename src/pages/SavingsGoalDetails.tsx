@@ -38,8 +38,8 @@ const SavingsGoalDetails = () => {
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = savingsData.transactionsTotalPages || 1;
-  const currentPg = savingsData.transactionsCurrentPage || currentPage;
+  const totalPages = savingsData?.transactionsTotalPages || 1;
+  const currentPg = savingsData?.transactionsCurrentPage || currentPage;
   
   useEffect(() => {
     loadData(currentPage);
