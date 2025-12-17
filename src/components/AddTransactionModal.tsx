@@ -2,10 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/components/ui/use-toast";
-import { useDateValidation } from "@/hooks/use-date-validation";
+import { formatToDDMMYYYY, useDateValidation } from "@/hooks/use-date-validation";
 import { useInputMask } from "@/hooks/use-input-mask";
 import InputMask from "react-input-mask";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "./ui/input";
 
 interface AddTransactionModalProps {
@@ -43,12 +43,29 @@ export function AddTransactionModal({ open, onClose, onSubmit, initialData, mode
     }).format(initialData.value),
     value: initialData.value,
     type: initialData.type,
-    date: initialData.date.split('-').reverse().join('/')
+    date: formatToDDMMYYYY(initialData.date),
   } : emptyFormData);
 
   const [dateError, setDateError] = useState("");
   const { toast } = useToast();
   const { validateDate } = useDateValidation();
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        description: initialData.description,
+        valueFormatted: new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(initialData.value),
+        value: initialData.value,
+        type: initialData.type === 'INCOME' ? 'INCOME' : 'EXPENSE',
+        date: formatToDDMMYYYY(initialData.date)
+      });
+    } else {
+      setFormData(emptyFormData);
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

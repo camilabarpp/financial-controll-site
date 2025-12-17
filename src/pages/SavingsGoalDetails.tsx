@@ -18,11 +18,10 @@ import { formatCurrency } from "@/utils/format-currency";
 import { formatDate } from "@/utils/format-date";
 import { calculateExpectedCompletion } from "@/utils/calculate-expected-saving_goal_completion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { deleteSavingsGoal, deleteSavingGoalTransaction, getSavingGoalSemesterTransactions, getSavingGoalTransactions, SavingGoalDetail, SavingGoalSemesterTransactions, SavingGoalTransactions, updateSavingsGoal, addSavingGoalTransaction } from "@/services/savingsService";
+import { deleteSavingsGoal, deleteSavingGoalTransaction, getSavingGoalSemesterTransactions, getSavingGoalTransactions, SavingGoalDetail, SavingGoalSemesterTransactions, SavingGoalTransactions, updateSavingsGoal, addSavingGoalTransaction, updateSavingGoalTransaction } from "@/services/savingsService";
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
 import { useResetScroll } from "@/hooks/useResetScroll";
-import { add } from "date-fns";
 
 const SavingsGoalDetails = () => {
   useResetScroll();
@@ -162,15 +161,23 @@ const SavingsGoalDetails = () => {
     setIsEditingTransaction(true);
   };
 
-  const handleUpdateTransaction = (updatedTransaction: {
+  const handleUpdateTransaction = async (updatedTransaction: {
     description: string;
     value: number;
     type: "INCOME" | "EXPENSE";
     date: string;
   }) => {
-    console.log("Atualizando transação:", { id, ...updatedTransaction });
-    setIsEditingTransaction(false);
-    setSelectedTransaction(null);
+    if (!selectedTransaction) return;
+      try {
+        await updateSavingGoalTransaction(id!, selectedTransaction.id, updatedTransaction);
+        await loadData(); 
+      } catch (error) {
+        console.error("Erro ao atualizar transação:", error);
+        setError("Erro ao atualizar transação");
+      } finally {
+        setIsEditingTransaction(false);
+        setSelectedTransaction(null);
+      }
   };
 
   const handleDeleteTransaction = async (transactionId: string) => {

@@ -39,6 +39,13 @@ export interface SavingGoalTransactions {
     description: string;
 }
 
+export interface SavingGoalTransactionRequest {
+    type: 'INCOME' | 'EXPENSE';
+    value: number;
+    date: string;
+    description: string;
+}
+
 export interface SavingGoalSemesterTransactions {
     month: string;
     incomeValue: number;
@@ -84,6 +91,10 @@ export async function addSavingGoalTransaction(savingId: string, transaction: {
   date: string;
 }): Promise<SavingGoalTransactions> {
   return http.post<SavingGoalTransactions>(`/savings/${savingId}/transactions`, transaction);
+}
+
+export async function updateSavingGoalTransaction(savingId: string, transactionId: string, transaction: SavingGoalTransactionRequest): Promise<SavingGoalTransactions> {
+  return http.put<SavingGoalTransactions>(`/savings/${savingId}/transactions/${transactionId}`, transaction);
 }
 
 export async function deleteSavingGoalTransaction(savingId: string, transactionId: string): Promise<void> {
