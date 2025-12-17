@@ -29,6 +29,9 @@ export interface SavingGoalDetail {
     lastSaved?: number;
     savingDueDate?: string;
     transactions: SavingGoalTransactions[];
+    transactionsTotal: number;
+    transactionsTotalPages: number;
+    transactionsCurrentPage: number;
 }
 
 export interface SavingGoalTransactions {
@@ -76,8 +79,8 @@ export async function deleteSavingsGoal(id: string): Promise<void> {
   return http.delete(`/savings/${id}`);
 }
 
-export async function getSavingGoalTransactions(savingId: string): Promise<SavingGoalDetail> {
-  return http.get<SavingGoalDetail>(`/savings/${savingId}/detail`);
+export async function getSavingGoalTransactions(savingId: string, transactionPage: number): Promise<SavingGoalDetail> {
+  return http.get<SavingGoalDetail>(`/savings/${savingId}/detail?transactionPage=${transactionPage}`);
 }
 
 export async function getSavingGoalSemesterTransactions(savingId: string): Promise<SavingGoalSemesterTransactions[]> {

@@ -37,17 +37,20 @@ const SavingsGoalDetails = () => {
   const [transactionToDelete, setTransactionToDelete] = useState<SavingGoalTransactions | null>(null);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = savingsData.transactionsTotalPages || 1;
+  const currentPg = savingsData.transactionsCurrentPage || currentPage;
+  
   useEffect(() => {
-    loadData();
-  }, [id]);
+    loadData(currentPage);
+  }, [id, currentPage]);
 
-  const loadData = async () => {
+  const loadData = async (transactionPage = 1) => {
     try {
       setError(null);
       setIsLoading(true);
       if (!id) return;
-      const data = await getSavingGoalTransactions((id));
+      const data = await getSavingGoalTransactions(id, transactionPage);
       setSavingsData(data);
 
       const savingSemesterTransactionsData = await getSavingGoalSemesterTransactions(id);
@@ -147,7 +150,8 @@ const SavingsGoalDetails = () => {
     try {
       console.log("Adicionando transação:", { id, ...transaction });
       await addSavingGoalTransaction(id!, transaction);
-      loadData();
+      setCurrentPage(1);
+      await loadData(1);
     } catch (error) {
       console.error("Erro ao adicionar transação:", error);
       setError("Erro ao adicionar transação");
@@ -170,7 +174,7 @@ const SavingsGoalDetails = () => {
     if (!selectedTransaction) return;
       try {
         await updateSavingGoalTransaction(id!, selectedTransaction.id, updatedTransaction);
-        await loadData(); 
+        await loadData(currentPage); 
       } catch (error) {
         console.error("Erro ao atualizar transação:", error);
         setError("Erro ao atualizar transação");
@@ -184,7 +188,10 @@ const SavingsGoalDetails = () => {
     try {
       if (!savingsData?.id) return;
       await deleteSavingGoalTransaction(savingsData.id, transactionId);
-      await loadData(); 
+      const isLastOnPage = savingsData.transactions.length === 1 && currentPage > 1;
+      const nextPage = isLastOnPage ? currentPage - 1 : currentPage;
+      setCurrentPage(nextPage);
+      await loadData(nextPage); 
       setTransactionToDelete(null);
     } catch (error) {
       console.error("Erro ao deletar transação:", error);
@@ -228,7 +235,7 @@ const SavingsGoalDetails = () => {
   if (!savingsData) {
     return <Error message="Meta não encontrada" />;
   }
-      
+
   return (
     <>
       <div className="min-h-screen bg-background p-4 pb-20">
@@ -414,11 +421,10 @@ const SavingsGoalDetails = () => {
             </Card>
           )}
 
-          {/* Histórico de movimentações */}
           <Card className="border-none shadow-md">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Histórico de Movimentações</CardTitle>
+                <CardTitle className="text-lg">Histórico de Movimentações ({savingsData.transactionsTotal})</CardTitle>
                 <Button size="icon" className="rounded-full" onClick={() => setIsAddingTransaction(true)}>
                   <Plus className="h-5 w-5" />
                 </Button>
@@ -428,63 +434,97 @@ const SavingsGoalDetails = () => {
               {savingsData.transactions.length === 0 ? (
                 <p className="text-muted-foreground">Nenhuma movimentação registrada.</p>
               ) : (
-                savingsData.transactions.map((item) => (
-                  <div 
-                    key={item.id} 
-                    className={`group flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors relative
-                      ${selectedTransaction?.id === item.id ? 'bg-primary/5' : ''}`}
-                    onClick={() => setSelectedTransaction(selectedTransaction?.id === item.id ? null : item)}
-                  >
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <div className="flex-shrink-0">
-                        {item.type === 'INCOME' ? (
-                          <ArrowUpRight className="h-4 w-4 text-positive" />
-                        ) : (
-                          <ArrowDownRight className="h-4 w-4 text-negative" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-xs text-muted-foreground block mb-0.5">{formatDate(item.date)}</span>
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium text-foreground truncate pr-4">{item.description}</p>
-                          {selectedTransaction?.id !== item.id && (
-                            <div className={`font-bold whitespace-nowrap ${item.type === 'INCOME' ? 'text-positive' : 'text-negative'}`}>
-                              {formatCurrency(item.value)}
-                            </div>
+                <>
+                  {savingsData.transactions.map((item) => (
+                    <div 
+                      key={item.id} 
+                      className={`group flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors relative
+                        ${selectedTransaction?.id === item.id ? 'bg-primary/5' : ''}`}
+                      onClick={() => setSelectedTransaction(selectedTransaction?.id === item.id ? null : item)}
+                    >
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div className="flex-shrink-0">
+                          {item.type === 'INCOME' ? (
+                            <ArrowUpRight className="h-4 w-4 text-positive" />
+                          ) : (
+                            <ArrowDownRight className="h-4 w-4 text-negative" />
                           )}
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs text-muted-foreground block mb-0.5">{formatDate(item.date)}</span>
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium text-foreground truncate pr-4">{item.description}</p>
+                            {selectedTransaction?.id !== item.id && (
+                              <div className={`font-bold whitespace-nowrap ${item.type === 'INCOME' ? 'text-positive' : 'text-negative'}`}>
+                                {formatCurrency(item.value)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
+                      {selectedTransaction?.id === item.id && (
+                        <div className="flex items-center space-x-1 ml-4">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditTransaction(item);
+                            }}
+                            className="p-2 rounded-lg hover:bg-primary/10 transition-colors"
+                          >
+                            <Pencil className="h-4 w-4 text-primary" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setTransactionToDelete(item);
+                            }}
+                            className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    {selectedTransaction?.id === item.id && (
-                      <div className="flex items-center space-x-1 ml-4">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditTransaction(item);
-                          }}
-                          className="p-2 rounded-lg hover:bg-primary/10 transition-colors"
-                        >
-                          <Pencil className="h-4 w-4 text-primary" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setTransactionToDelete(item);
-                          }}
-                          className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </button>
-                      </div>
-                    )}
+                  ))}
+                  <div className="flex justify-center sm:justify-center items-center gap-3 mt-4
+                    sm:flex-row flex-row
+                    flex
+                    w-full
+                    sm:space-x-3
+                    space-x-0
+                    space-y-0
+                    sm:space-y-0
+                  ">
+                    <div className="flex w-full sm:w-auto justify-between sm:justify-center gap-3">
+                      <Button
+                        size="sm"
+                        variant={currentPg <= 1 ? "outline" : "default"}
+                        className="rounded-full px-4 font-semibold shadow-sm transition-all"
+                        disabled={currentPg <= 1}
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      >
+                        Anterior
+                      </Button>
+                      <span className="text-xs text-muted-foreground font-medium flex items-center">
+                        Página {currentPg} de {totalPages}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant={currentPg >= totalPages ? "outline" : "default"}
+                        className="rounded-full px-4 font-semibold shadow-sm transition-all"
+                        disabled={currentPg >= totalPages}
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      >
+                        Próxima
+                      </Button>
+                    </div>
                   </div>
-                ))
+                </>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Modais permanecem iguais */}
         <AddTransactionModal
           open={isAddingTransaction}
           onClose={() => setIsAddingTransaction(false)}
