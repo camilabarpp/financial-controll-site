@@ -37,6 +37,7 @@ class HttpClient {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...fetchConfig,
       headers,
+      credentials: 'include',
     });
 
     const data = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
