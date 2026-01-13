@@ -22,6 +22,7 @@ class HttpClient {
     
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...fetchConfig.headers,
     };
 
@@ -38,6 +39,7 @@ class HttpClient {
       ...fetchConfig,
       headers,
       credentials: 'include',
+      mode: 'cors',
     });
 
     const data = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
