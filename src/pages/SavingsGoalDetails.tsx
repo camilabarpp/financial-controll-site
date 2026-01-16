@@ -22,6 +22,7 @@ import { deleteSavingsGoal, deleteSavingGoalTransaction, getSavingGoalSemesterTr
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
 import { useResetScroll } from "@/hooks/useResetScroll";
+import { NotFoundError, AuthenticationError, NetworkError } from "@/errors/index";
 
 const SavingsGoalDetails = () => {
   useResetScroll();
@@ -55,9 +56,23 @@ const SavingsGoalDetails = () => {
 
       const savingSemesterTransactionsData = await getSavingGoalSemesterTransactions(id);
       setSavingSemesterTransactions(savingSemesterTransactionsData);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error loading savings goal details:', error);
-      setError('Erro ao carregar detalhes da meta');
+      
+      if (error instanceof NotFoundError) {
+        setError(error.message);
+      } else if (error instanceof AuthenticationError) {
+        if (error.shouldClearToken) {
+          localStorage.removeItem('token');
+        }
+        setError(error.message);
+      } else if (error instanceof NetworkError) {
+        setError(error.message);
+      } else if (error instanceof Error) {
+        setError('Erro ao carregar dados das economias');
+      } else {
+        setError('Erro desconhecido ao carregar dados');
+      }
     } finally {
       setIsLoading(false);
     }

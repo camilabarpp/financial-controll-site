@@ -1,3 +1,4 @@
+import { AuthenticationError, NetworkError, NotFoundError } from "@/errors/index";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 interface RequestConfig extends RequestInit {
@@ -29,7 +30,7 @@ class HttpClient {
     if (requiresAuth && !publicEndpoints.includes(endpoint)) {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Token não encontrado');
+        throw new AuthenticationError('Token não encontrado', true);
       }
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -42,14 +43,19 @@ class HttpClient {
     const data = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
 
     if (!response.ok) {
+      // 401 - Unauthorized
       if (response.status === 401) {
-        // Only remove token if it's an authentication error, not a password validation error
-        if (data.message.includes('Token')) {
-          localStorage.removeItem('token');
-        }
-        throw new Error(data.message);
+        const shouldClearToken = data.message?.includes('Token') || data.message?.includes('token');
+        throw new AuthenticationError(data.message || 'Não autorizado', shouldClearToken);
       }
-      throw new Error(data.message);
+      
+      // 404 - Not Found
+      if (response.status === 404) {
+        throw new NotFoundError(data.message || 'Recurso não encontrado');
+      }
+      
+      // Outros erros HTTP
+      throw new NetworkError(data.message || 'Erro na requisição');
     }
 
     if (response.status === 204) {
