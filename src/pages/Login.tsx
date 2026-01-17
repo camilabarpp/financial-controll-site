@@ -31,8 +31,11 @@ export default function Login() {
     try {
       const { token } = await loginService({ email, password });
       saveToken(token);
-      login();
-      navigate("/");
+      await login();
+      
+      const redirectTo = sessionStorage.getItem('redirectAfterLogin') || '/';
+      sessionStorage.removeItem('redirectAfterLogin');
+      navigate(redirectTo);
     } catch (err: any) {
       setError(err.message || "Erro ao fazer login");
     } finally {

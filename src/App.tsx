@@ -32,6 +32,10 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   if (isLoading) return null;
 
   if (!isAuthenticated) {
+    const currentPath = window.location.hash.slice(1);
+    if (currentPath && currentPath !== '/login') {
+      sessionStorage.setItem('redirectAfterLogin', currentPath);
+    }
     return <Navigate to="/login" replace />;
   }
 
