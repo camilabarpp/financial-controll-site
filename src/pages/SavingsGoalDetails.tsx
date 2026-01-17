@@ -222,7 +222,9 @@ const SavingsGoalDetails = () => {
     ? calculateProgress(savingsData.current, savingsData.savingTargetValue)
     : null;
 
-  const expectedCompletionDate = (savingsData?.savingTargetValue && savingsData?.lastSaved)
+  const isGoalCompleted = progressPercentage !== null && progressPercentage >= 100;
+
+  const expectedCompletionDate = (savingsData?.savingTargetValue && savingsData?.lastSaved && !isGoalCompleted)
     ? calculateExpectedCompletion(savingsData.current, savingsData.savingTargetValue, savingsData.lastSaved)
     : null;
 
@@ -311,9 +313,11 @@ const SavingsGoalDetails = () => {
                           <div className="w-2 h-2 rounded-full bg-primary" />
                           <span className="text-xs font-medium">{progressPercentage?.toFixed(0)}% concluído</span>
                         </div>
-                        <span className="text-xs font-medium text-muted-foreground">
-                          Faltam {formatCurrency(savingsData.savingTargetValue - savingsData.current)}
-                        </span>
+                        {savingsData.current < savingsData.savingTargetValue && (
+                          <span className="text-xs font-medium text-muted-foreground">
+                            Faltam {formatCurrency(savingsData.savingTargetValue - savingsData.current)}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -321,7 +325,7 @@ const SavingsGoalDetails = () => {
 
                 {/* Datas */}
                 <div className="px-4 py-4 grid grid-cols-2 gap-4">
-                  {savingsData.savingDueDate && (
+                  {savingsData.savingDueDate && (!savingsData.savingTargetValue || savingsData.current < savingsData.savingTargetValue) && (
                     <div className="flex items-center gap-1.5">
                       <Calendar className="h-4 w-4 text-primary" />
                       <div className="flex flex-col">
