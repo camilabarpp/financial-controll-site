@@ -1,5 +1,12 @@
 import { http } from '@/utils/httpClient';
 
+export interface SavingTotalsPaginated {
+  savings: SavingsGoal[];
+  total: number;
+  totalPages: number;
+  currentPage: number;
+}
+
 export interface SavingsGoal {
   id: string;
   name: string;
@@ -55,8 +62,8 @@ export interface SavingGoalSemesterTransactions {
     expenseValue: number;
 }
 
-export async function getAllSavingsGoals(): Promise<SavingsGoal[]> {
-  return http.get<SavingsGoal[]>('/savings');
+export async function getAllSavingsGoals(): Promise<SavingTotalsPaginated> {
+  return http.get<SavingTotalsPaginated>('/savings');
 }
 
 export async function getSavingsGoalTotals(): Promise<SavingsGoalTotals> {

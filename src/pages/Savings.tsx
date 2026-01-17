@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Target, TrendingUp, Plus } from "lucide-react";
+import { Target, TrendingUp, Plus, Calendar } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SavingsGoalModal } from "@/components/SavingsGoalModal";
@@ -10,14 +10,16 @@ import { formatCurrency } from "@/utils/format-currency";
 import { formatTimeRemaining } from "@/utils/format-time-remaining";
 import { formatDate } from "@/utils/format-date";
 import { calculateExpectedCompletion } from "@/utils/calculate-expected-saving_goal_completion";
-import { getAllSavingsGoals, getSavingsGoalTotals, createSavingsGoal, SavingsGoal, SavingsGoalTotals } from "@/services/savingsService";
+import { getAllSavingsGoals, getSavingsGoalTotals, createSavingsGoal, SavingsGoal, SavingsGoalTotals, SavingTotalsPaginated } from "@/services/savingsService";
 import { Loading } from "@/components/ui/loading";
 import { Error } from "@/components/ui/error";
 import { useResetScroll } from "@/hooks/useResetScroll";
+import { EmptyDataPage } from "@/components/EmptyDataPage";
 
 const Savings = () => {
   useResetScroll();
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
+  const [savingsGoalsPaginated, setSavingsGoalsPaginated] = useState<SavingTotalsPaginated | null>(null);
   const [totals, setTotals] = useState<SavingsGoalTotals | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,8 +38,10 @@ const Savings = () => {
         getAllSavingsGoals(),
         getSavingsGoalTotals()
       ]);
+      setSavingsGoalsPaginated(goalsData);
       setSavingsGoals(goalsData.savings);
       setTotals(totalsData);
+      console.log('Savings goals data:', goalsData);
     } catch (error) {
       console.error('Error loading savings data:', error);
       setError('Erro ao carregar dados das economias');
@@ -131,12 +135,17 @@ const Savings = () => {
 
 
         <div className="space-y-4">
-          {savingsGoals.map((goal) => {
-            const progress = calculateProgress(goal.current, goal.savingTargetValue);
-            const isCompleted = progress !== undefined && progress >= 100;
-            const hasTarget = goal.savingTargetValue !== undefined;
-            
-            return (
+          {savingsGoals.length === 0 ? (
+            <EmptyDataPage 
+              description="Nenhuma meta de economia cadastrada. Clique no botão + para adicionar uma nova meta."
+            />
+          ) : (
+            savingsGoals.map((goal) => {
+              const progress = calculateProgress(goal.current, goal.savingTargetValue);
+              const isCompleted = progress !== undefined && progress >= 100;
+              const hasSaving = savingsGoalsPaginated && savingsGoalsPaginated.total > 0;
+              
+              return (
               <Card key={goal.id} className="overflow-hidden cursor-pointer" onClick={() => navigate(`/savings/${goal.id}`)}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -153,7 +162,7 @@ const Savings = () => {
                         )}
                       </div>
                     </div>
-                    {hasTarget && progress !== undefined && (
+                    {hasSaving && progress !== undefined && goal.savingTargetValue && (
                       <div className="text-right">
                         <p className={`text-xl font-bold ${getProgressColor(progress)}`}>
                           {progress.toFixed(0)}%
@@ -163,67 +172,77 @@ const Savings = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {hasTarget && (
-                    <div className="space-y-2">
-                      <Progress 
-                        value={progress} 
-                        className="h-3"
-                        style={{
-                          backgroundColor: "hsl(var(--primary-transparent))"
-                        }}
+                  {hasSaving ? (
+                    <>
+                      {goal.savingTargetValue && (
+                        <div className="space-y-2">
+                          <Progress 
+                            value={progress} 
+                            className="h-3"
+                            style={{
+                              backgroundColor: "hsl(var(--primary-transparent))"
+                            }}
+                          />
+                          <div className="flex justify-between text-sm">
+                            <span className="text-foreground font-medium">
+                              {formatCurrency(goal.current)}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {formatCurrency(goal.savingTargetValue)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {goal.lastSaved > 0 && (
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center space-x-2">
+                          <Target className="h-4 w-4 text-primary" />
+                          <span className="text-muted-foreground">
+                            {goal.savingDueDate ? "Previsão" : "Último aporte"}
+                          </span>
+                        </div>
+                        <span className={`font-medium ${
+                          goal.savingDueDate && calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved) && 
+                          new Date(goal.savingDueDate) < calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved)!
+                            ? "text-destructive"
+                            : "text-foreground"
+                        }`}>
+                          {goal.savingDueDate ? (
+                            calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved) ? 
+                              formatDate(calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved)!) :
+                              "Ritmo insuficiente"
+                          ) : (
+                            formatCurrency(goal.lastSaved)
+                          )}
+                        </span>
+                      </div>
+                      )}
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center space-x-2">
+                          <TrendingUp className="h-4 w-4 text-positive" />
+                          <span className="text-muted-foreground">
+                            {hasSaving && !isCompleted && goal.savingTargetValue ? "Faltam" : "Total"}
+                          </span>
+                        </div>
+                        <span className="font-medium text-foreground">
+                          {hasSaving && !isCompleted && goal.savingTargetValue
+                            ? formatCurrency(goal.savingTargetValue - goal.current)
+                            : formatCurrency(goal.current)
+                          }
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                      <EmptyDataPage 
+                        description="Nenhuma transação recente para mostrar."
                       />
-                      <div className="flex justify-between text-sm">
-                        <span className="text-foreground font-medium">
-                          {formatCurrency(goal.current)}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {formatCurrency(goal.savingTargetValue)}
-                        </span>
-                      </div>
-                    </div>
                   )}
-                  {hasTarget && goal.lastSaved && goal.lastSaved > 0 && (
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center space-x-2">
-                        <Target className="h-4 w-4 text-primary" />
-                        <span className="text-muted-foreground">
-                          {goal.savingDueDate ? "Previsão" : "Último aporte"}
-                        </span>
-                      </div>
-                      <span className={`font-medium ${
-                        goal.savingDueDate && calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved) && 
-                        new Date(goal.savingDueDate) < calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved)!
-                          ? "text-destructive"
-                          : "text-foreground"
-                      }`}>
-                        {goal.savingDueDate ? (
-                          calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved) ? 
-                            formatDate(calculateExpectedCompletion(goal.current, goal.savingTargetValue!, goal.lastSaved)!) :
-                            "Ritmo insuficiente"
-                        ) : (
-                          formatCurrency(goal.lastSaved)
-                        )}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center space-x-2">
-                      <TrendingUp className="h-4 w-4 text-positive" />
-                      <span className="text-muted-foreground">
-                        {hasTarget && !isCompleted ? "Faltam" : "Total"}
-                      </span>
-                    </div>
-                    <span className="font-medium text-foreground">
-                      {hasTarget && !isCompleted 
-                        ? formatCurrency(goal.savingTargetValue - goal.current)
-                        : formatCurrency(goal.current)
-                      }
-                    </span>
-                  </div>
                 </CardContent>
               </Card>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
       </div>
