@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Target, TrendingUp, Plus, Calendar } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { SavingsGoalModal } from "@/components/SavingsGoalModal";
 import { formatCurrency } from "@/utils/format-currency";
 import { formatTimeRemaining } from "@/utils/format-time-remaining";
@@ -145,8 +145,9 @@ const Savings = () => {
               const hasSaving = savingsGoalsPaginated && savingsGoalsPaginated.total > 0;
               
               return (
-              <Card key={goal.id} className="overflow-hidden cursor-pointer" onClick={() => navigate(`/savings/${goal.id}`)}>
-                <CardHeader className="pb-3">
+              <Link key={goal.id} to={`/savings/${goal.id}`} className="block">
+                <Card className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div>
@@ -239,6 +240,7 @@ const Savings = () => {
                   )}
                 </CardContent>
               </Card>
+              </Link>
               );
             })
           )}
