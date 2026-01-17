@@ -42,15 +42,13 @@ export function SavingsGoalModal({
 
   useEffect(() => {
     if (initialData) {
-      const formattedDate = formatDate(initialData.savingDueDate);
-
       setFormData({
         name: initialData.name,
         savingTargetValueFormatted: initialData.savingTargetValue 
           ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(initialData.savingTargetValue)
           : '',
         savingTargetValue: initialData.savingTargetValue || 0,
-        savingDueDate: formattedDate
+        savingDueDate: initialData.savingDueDate ? formatDate(initialData.savingDueDate) : ''
       });
     }
   }, [initialData]);
