@@ -73,7 +73,6 @@ export function Combobox({
     // Se o valor não está nos itens e não está vazio, mostra o valor no botão
     // (o botão já faz isso, mas garantimos que searchTerm não interfira)
     if (allowCustom && value && !items.some(item => item.value === value)) {
-      console.log("Valor criado:", value)
       setSearchTerm("")
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -235,9 +235,7 @@ const Account = () => {
         newPassword: "",
         confirmPassword: ""
       });
-      
-      console.log("Senha alterada com sucesso!");
-      
+           
     } catch (error) {
       if (error instanceof Error) {
         setPasswordErrors(prev => ({

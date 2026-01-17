@@ -41,7 +41,6 @@ const Savings = () => {
       setSavingsGoalsPaginated(goalsData);
       setSavingsGoals(goalsData.savings);
       setTotals(totalsData);
-      console.log('Savings goals data:', goalsData);
     } catch (error) {
       console.error('Error loading savings data:', error);
       setError('Erro ao carregar dados das economias');

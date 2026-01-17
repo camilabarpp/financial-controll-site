@@ -163,7 +163,6 @@ const SavingsGoalDetails = () => {
     date: string;
   }) => {
     try {
-      console.log("Adicionando transação:", { id, ...transaction });
       await addSavingGoalTransaction(id!, transaction);
       setCurrentPage(1);
       await loadData(1);
